@@ -1,14 +1,18 @@
 'use client';
 
-import { Search, Command, ExternalLink, BookOpen } from 'lucide-react';
+import { Search, Command, ExternalLink, BookOpen, Bell } from 'lucide-react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fetcher } from '@/lib/api-client';
 import type { HealthResponse } from '@/lib/api-types';
 import { MOCK_HEALTH } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { BreadcrumbBar } from './breadcrumb';
+import { DensityToggle } from './density-toggle';
+import { NotificationsDrawer } from './notifications-drawer';
+import { SystemPulse } from './system-pulse';
+import { getMockNotifications, type NotificationItem } from '@/lib/notifications';
 
 export function Topbar() {
   const { data: rawHealth } = useSWR<HealthResponse>('/v1/health', fetcher, {
@@ -32,9 +36,23 @@ export function Topbar() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // 通知抽屉
+  const [openNotif, setOpenNotif] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
+    getMockNotifications()
+  );
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
+  const markRead = (id: string) =>
+    setNotifications((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAllRead = () =>
+    setNotifications((ns) => ns.map((n) => ({ ...n, read: true })));
+
   return (
     <header className="sticky top-0 z-20 backdrop-blur-md bg-parchment-100/80 border-b border-ink-100/60">
-      <div className="flex items-center gap-6 px-6 lg:px-10 h-14">
+      <div className="flex items-center gap-4 px-6 lg:px-10 h-14">
         {/* breadcrumb 占 1fr */}
         <div className="flex-1 min-w-0">
           <BreadcrumbBar />
@@ -59,6 +77,29 @@ export function Topbar() {
         {/* health pill */}
         <HealthPill health={health} mock={mock} />
 
+        {/* notification bell */}
+        <button
+          type="button"
+          onClick={() => setOpenNotif(true)}
+          aria-label="打开通知"
+          title="通知"
+          className={cn(
+            'relative inline-flex items-center justify-center w-9 h-9 rounded-md',
+            'bg-card border border-ink-100/80 text-ink-400 hover:text-ink-800 hover:bg-parchment-200 transition'
+          )}
+        >
+          <Bell className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span
+              aria-hidden
+              className="absolute top-1 right-1.5 w-2 h-2 rounded-full bg-ember-500 ring-2 ring-parchment-100 animate-pulse-dot"
+            />
+          )}
+        </button>
+
+        {/* density toggle */}
+        <DensityToggle />
+
         {/* docs link */}
         <Link
           href="https://github.com/aiforge/aiforge"
@@ -71,7 +112,18 @@ export function Topbar() {
         </Link>
       </div>
 
+      {/* 系统脉冲条 */}
+      <SystemPulse />
+
       {showCmd && <CommandPalette onClose={() => setShowCmd(false)} />}
+
+      <NotificationsDrawer
+        open={openNotif}
+        onOpenChange={setOpenNotif}
+        items={notifications}
+        onMarkRead={markRead}
+        onMarkAllRead={markAllRead}
+      />
     </header>
   );
 }

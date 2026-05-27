@@ -1,0 +1,25 @@
+# 学术 / 博客引用 AIForge 时的标准元数据
+# 参考 https://citation-file-format.github.io/
+cff-version: 1.2.0
+title: "AIForge: Unified Registry & Router for Agent Skills, MCP Servers, and Claude Code Plugins"
+message: "If you use AIForge in academic work or technical writing, please cite it as below."
+type: software
+authors:
+  - given-names: AIForge
+    family-names: Contributors
+    website: "https://github.com/sheep-programmer/AIForge"
+repository-code: "https://github.com/sheep-programmer/AIForge"
+url: "https://github.com/sheep-programmer/AIForge"
+license: Apache-2.0
+version: 0.2.0
+date-released: 2026-05-27
+keywords:
+  - claude-code
+  - model-context-protocol
+  - mcp-server
+  - rag
+  - skill-router
+  - agent-tools
+  - llm
+  - retrieval-augmented-generation
+  - self-hosted

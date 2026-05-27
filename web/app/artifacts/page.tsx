@@ -3,10 +3,10 @@
 
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import {
   Boxes,
   ChevronLeft,
@@ -17,6 +17,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { fetcher } from '@/lib/api-client';
 import type {
   ArtifactBrief,
@@ -37,7 +38,12 @@ import {
   ArtifactCardSkeleton,
   ArtifactRow,
   ArtifactRowSkeleton,
+  RowCheckbox,
 } from '@/components/artifacts/artifact-row';
+import { BulkActionsBar } from '@/components/artifacts/bulk-actions-bar';
+import { BulkTagDialog } from '@/components/artifacts/bulk-tag-dialog';
+import { BulkConfirmDialog } from '@/components/artifacts/bulk-confirm-dialog';
+import { bulkDelete, bulkToggleActive } from '@/lib/bulk-ops';
 
 const PAGE_SIZE = 50;
 
@@ -76,6 +82,16 @@ function ArtifactsPageInner() {
   const view = (sp.get('view') as 'table' | 'card' | null) ?? 'table';
 
   const [searchInput, setSearchInput] = useState(q);
+
+  // —— Bulk 选择 ——
+  // 选中集合：跨分页只在同一 session 内保留（Set<string>）。
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkProgress, setBulkProgress] =
+    useState<{ done: number; total: number; label?: string } | null>(null);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { mutate } = useSWRConfig();
 
   // 构建 SWR key
   const apiUrl = useMemo(() => {
@@ -149,6 +165,138 @@ function ArtifactsPageInner() {
     }
     return arr;
   }, [visible, sort]);
+
+  // —— Bulk: 当前页可见 ID + 选中状态衍生 ——
+  const visibleIds = useMemo(() => sortedItems.map((a) => a.id), [sortedItems]);
+  const visibleSelectedCount = useMemo(
+    () => visibleIds.filter((id) => selected.has(id)).length,
+    [visibleIds, selected]
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+  const someVisibleSelected =
+    visibleSelectedCount > 0 && !allVisibleSelected;
+
+  const toggleOne = useCallback((id: string, next: boolean) => {
+    setSelected((prev) => {
+      const ns = new Set(prev);
+      if (next) ns.add(id);
+      else ns.delete(id);
+      return ns;
+    });
+  }, []);
+
+  const toggleAllVisible = useCallback(
+    (next: boolean) => {
+      setSelected((prev) => {
+        const ns = new Set(prev);
+        for (const id of visibleIds) {
+          if (next) ns.add(id);
+          else ns.delete(id);
+        }
+        return ns;
+      });
+    },
+    [visibleIds]
+  );
+
+  const clearSelection = useCallback(() => setSelected(new Set()), []);
+
+  const selectedIds = useMemo(() => Array.from(selected), [selected]);
+
+  const refreshList = useCallback(() => {
+    // 让任何 /v1/artifacts? 开头的 SWR key 重新拉取 + tags（artifact_count 可能变）
+    mutate((key) => typeof key === 'string' && key.startsWith('/v1/artifacts'));
+    mutate('/v1/tags');
+  }, [mutate]);
+
+  // ESC 清除选择；Cmd/Ctrl+A 选中当前页全部
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selected.size > 0) {
+        clearSelection();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+        const t = e.target as HTMLElement | null;
+        const tag = t?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+        e.preventDefault();
+        toggleAllVisible(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected.size, clearSelection, toggleAllVisible]);
+
+  // —— Bulk 动作 ——
+  const runBulk = useCallback(
+    async (
+      label: string,
+      runner: (
+        ids: string[],
+        opts: { onProgress: (d: number, t: number) => void }
+      ) => Promise<{ ok: string[]; failed: { id: string; error: string }[] }>
+    ) => {
+      if (selectedIds.length === 0 || bulkBusy) return;
+      setBulkBusy(true);
+      setBulkProgress({ done: 0, total: selectedIds.length, label });
+      const result = await runner(selectedIds, {
+        onProgress: (done, total) => setBulkProgress({ done, total, label }),
+      });
+      setBulkBusy(false);
+      setBulkProgress(null);
+      refreshList();
+      if (result.failed.length === 0) {
+        toast.success(`${label} · ${result.ok.length} 项完成`);
+      } else {
+        toast.warning(
+          `${label} · 成功 ${result.ok.length} · 失败 ${result.failed.length}`,
+          { description: result.failed.slice(0, 3).map((f) => f.id).join('  ') }
+        );
+      }
+    },
+    [selectedIds, bulkBusy, refreshList]
+  );
+
+  const handleBulkEnable = useCallback(
+    () => runBulk('启用', (ids, opts) => bulkToggleActive(ids, true, opts)),
+    [runBulk]
+  );
+  const handleBulkDisable = useCallback(
+    () => runBulk('禁用', (ids, opts) => bulkToggleActive(ids, false, opts)),
+    [runBulk]
+  );
+  const handleBulkDelete = useCallback(async () => {
+    await runBulk('删除', (ids, opts) => bulkDelete(ids, opts));
+    clearSelection();
+  }, [runBulk, clearSelection]);
+
+  const handleExportJson = useCallback(() => {
+    const rows = sortedItems.filter((a) => selected.has(a.id));
+    const blob = new Blob([JSON.stringify(rows, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `artifacts-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`已导出 ${rows.length} 项 JSON`);
+  }, [sortedItems, selected]);
+
+  const handleCopyIds = useCallback(async () => {
+    const text = selectedIds.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`已复制 ${selectedIds.length} 个 ID`);
+    } catch {
+      toast.error('剪贴板不可用');
+    }
+  }, [selectedIds]);
 
   // URL helpers
   const pushQuery = (updates: Record<string, string | null>) => {
@@ -333,19 +481,35 @@ function ArtifactsPageInner() {
           {view === 'table' ? (
             <Surface padding="none">
               {/* 表头 */}
-              <div className="hidden md:grid grid-cols-12 items-center gap-3 px-5 py-2.5 border-b border-ink-100/60 bg-parchment-100/60">
-                <div className="col-span-4 label !mb-0">名称</div>
-                <div className="col-span-1 label !mb-0">类型</div>
-                <div className="col-span-3 label !mb-0">标签</div>
-                <div className="col-span-1 label !mb-0">Stars</div>
-                <div className="col-span-1 label !mb-0">推荐</div>
-                <div className="col-span-2 label !mb-0 text-right">更新</div>
+              <div className="hidden md:flex items-stretch border-b border-ink-100/60 bg-parchment-100/60">
+                <div className="flex items-center pl-5 pr-2 shrink-0 py-2.5">
+                  <RowCheckbox
+                    checked={allVisibleSelected}
+                    indeterminate={someVisibleSelected}
+                    onChange={(next) => toggleAllVisible(next)}
+                    label="本页全部"
+                  />
+                </div>
+                <div className="flex-1 min-w-0 grid grid-cols-12 items-center gap-3 pl-2 pr-5 py-2.5">
+                  <div className="col-span-4 label !mb-0">名称</div>
+                  <div className="col-span-1 label !mb-0">类型</div>
+                  <div className="col-span-3 label !mb-0">标签</div>
+                  <div className="col-span-1 label !mb-0">Stars</div>
+                  <div className="col-span-1 label !mb-0">推荐</div>
+                  <div className="col-span-2 label !mb-0 text-right">更新</div>
+                </div>
               </div>
               <ul>
                 {artifactsLoading && !isDemo
                   ? Array.from({ length: 8 }).map((_, i) => <ArtifactRowSkeleton key={i} />)
                   : sortedItems.map((a) => (
-                      <ArtifactRow key={a.id} artifact={a} view="table" />
+                      <ArtifactRow
+                        key={a.id}
+                        artifact={a}
+                        view="table"
+                        selected={selected.has(a.id)}
+                        onToggle={toggleOne}
+                      />
                     ))}
               </ul>
               {!artifactsLoading && sortedItems.length === 0 && (
@@ -418,6 +582,45 @@ function ArtifactsPageInner() {
           )}
         </div>
       </div>
+
+      {/* 浮动 Bulk 操作条 */}
+      <BulkActionsBar
+        count={selected.size}
+        busy={bulkBusy}
+        progress={bulkProgress}
+        onAddTag={() => setTagDialogOpen(true)}
+        onRemoveTag={() => setTagDialogOpen(true)}
+        onEnable={handleBulkEnable}
+        onDisable={handleBulkDisable}
+        onDelete={() => setDeleteDialogOpen(true)}
+        onExportJson={handleExportJson}
+        onCopyIds={handleCopyIds}
+        onClear={clearSelection}
+      />
+
+      {/* 批量打标弹窗 */}
+      <BulkTagDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        selectedIds={selectedIds}
+        onCompleted={refreshList}
+      />
+
+      {/* 批量删除二次确认 */}
+      <BulkConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={`删除 ${selected.size} 个 artifact`}
+        description={
+          <>
+            该操作会从数据库中移除所选条目及其标签关联。请输入下方文案以确认。
+          </>
+        }
+        dangerText="该操作不可撤销 · 服务端不支持回滚"
+        requireText="DELETE"
+        confirmLabel={`删除 ${selected.size} 项`}
+        onConfirm={handleBulkDelete}
+      />
     </div>
   );
 }

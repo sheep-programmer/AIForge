@@ -173,4 +173,38 @@ export const api = {
     });
     return parseJsonOrThrow<{ discovery_id: string; decision: string }>(res);
   },
+
+  patchArtifact: async (id: string, body: { is_active: boolean }) => {
+    const res = await rawFetch(`/v1/skills/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return parseJsonOrThrow<ArtifactDetail>(res);
+  },
+
+  deleteArtifact: async (id: string) => {
+    const res = await rawFetch(`/v1/skills/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      await parseJsonOrThrow<unknown>(res);
+    }
+  },
+
+  addArtifactTag: async (id: string, tag: string, source: 'manual' | 'auto' = 'manual') => {
+    const res = await rawFetch(`/v1/artifacts/${id}/tags`, {
+      method: 'POST',
+      body: JSON.stringify({ tag, source }),
+    });
+    return parseJsonOrThrow<ArtifactTagsResponse>(res);
+  },
+
+  removeArtifactTag: async (id: string, tag: string) => {
+    const res = await rawFetch(
+      `/v1/artifacts/${id}/tags/${encodeURIComponent(tag)}`,
+      { method: 'DELETE' }
+    );
+    if (!res.ok && res.status !== 204) {
+      return parseJsonOrThrow<ArtifactTagsResponse>(res);
+    }
+    return null;
+  },
 };

@@ -5,7 +5,7 @@ sequenceDiagram
     participant User as 用户
     participant CC as Claude Code
     participant Hook as Hook (Python)
-    participant API as Skillforge API
+    participant API as AIForge API
     participant Pipe as recommend pipeline
     participant DB as SQLite + vss
     participant LLM as Reranker (Qwen/Haiku)
@@ -40,7 +40,7 @@ sequenceDiagram
     deactivate API
 
     alt 服务端可达
-        Hook->>Hook: 渲染 <skillforge-recommendations>
+        Hook->>Hook: 渲染 <aiforge-recommendations>
     else 服务端超时 (>250ms)
         Hook->>Hook: 本地兜底（缓存 SQLite + BM25）<br/>每 session 警告一次
     end

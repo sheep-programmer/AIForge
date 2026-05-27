@@ -13,6 +13,7 @@ import {
   Settings as SettingsIcon,
   ChevronsLeft,
   ChevronsRight,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
@@ -47,6 +48,12 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: '/playground', label: 'Playground', hint: '推荐效果试验', icon: Sparkles },
       { href: '/discovery', label: '审批队列', hint: '远程发现的新仓库', icon: GitPullRequestArrow },
+    ],
+  },
+  {
+    title: 'Analytics',
+    items: [
+      { href: '/insights', label: 'Insights', hint: '推荐质量与流量分析', icon: BarChart3, flag: 'NEW' },
     ],
   },
   {

@@ -1,19 +1,27 @@
-%% Skillforge 总体架构图
+%% AIForge 总体架构图 (v0.2)
 %% 渲染：mermaid CLI 或 GitHub 自动渲染
 %% 中英对照：节点用中文标签，技术细节标注英文术语
 
 flowchart TB
-    subgraph CC["Claude Code (用户终端)"]
-        UPS["UserPromptSubmit 事件"]
-        Hook["on-user-prompt Hook"]
-        FB[("本地兜底 SQLite<br/>BM25 索引")]
-        UPS --> Hook
-        Hook -.超时切换.-> FB
+    subgraph USER["用户终端"]
+        subgraph CC["Claude Code"]
+            UPS["UserPromptSubmit 事件"]
+            Hook["on-user-prompt Hook"]
+            FB[("本地兜底 SQLite<br/>BM25 索引")]
+            UPS --> Hook
+            Hook -.服务端超时切换.-> FB
+            CLI_CMD["/aiforge:* 斜杠命令<br/>list / install / tag / autotag …"]
+        end
+        GW["aiforge-mcp<br/>运行时 MCP 网关<br/>(单一对外 stdio MCP)"]
     end
 
-    subgraph SRV["Skillforge 服务端"]
+    subgraph BROWSER["浏览器"]
+        WEB["Web Admin Console<br/>(Next.js 14 · 9 路由)<br/>Dashboard / Artifacts / Tags<br/>Ingest / Autotag / Playground<br/>Discovery / Settings / Insights"]
+    end
+
+    subgraph SRV["AIForge 服务端"]
         direction TB
-        API["FastAPI HTTP API<br/>/v1/recommend · /v1/ingest · /v1/admin"]
+        API["FastAPI HTTP API<br/>/v1/recommend · /v1/artifacts · /v1/tags<br/>/v1/ingest · /v1/admin/autotag<br/>/v1/admin/discoveries"]
 
         subgraph REC["推荐管线 (recommender/)"]
             direction LR
@@ -25,12 +33,16 @@ flowchart TB
             EMB --> RET --> DED --> RNK --> BUD
         end
 
+        subgraph TGR["自动打标 (recommender/tagger.py)"]
+            TAGGER["Auto-tagger<br/>从 20 个预置 tag 挑 1-3 个<br/>串行 · 限速 50ms"]
+        end
+
         subgraph ING["入库管线 (ingestion/)"]
             direction LR
             CLN["git clone --depth=1"]
-            PARS["frontmatter 解析"]
-            SPL["多 skill 拆分"]
-            CLN --> PARS --> SPL
+            DET["类型检测<br/>plugin > mcp > skill"]
+            ADP["三类适配器<br/>plugin_adapter / mcp_adapter<br/>SKILL.md parser"]
+            CLN --> DET --> ADP
         end
 
         subgraph DISC["远程发现 (discovery/) · 默认关闭"]
@@ -41,14 +53,16 @@ flowchart TB
             FIND --> SCORE --> APPR
         end
 
-        DB[("SQLite + sqlite-vss<br/>skills · ingest_jobs<br/>pending_discoveries<br/>recommendation_logs")]
+        DB[("SQLite + sqlite-vss<br/>skills(artifact_type, mcp_config, plugin_manifest)<br/>tags · skill_tags(source, score)<br/>ingest_jobs · pending_discoveries<br/>recommendation_logs")]
 
         API --> REC
         API --> ING
         API --> DISC
+        API --> TGR
         REC <--> DB
         ING --> DB
         DISC --> DB
+        TGR <--> DB
         APPR -. approve .-> ING
     end
 
@@ -56,15 +70,27 @@ flowchart TB
         OLLAMA["Ollama<br/>Qwen-1.5B"]
         HAIKU["Anthropic API<br/>Claude Haiku"]
         GH["GitHub<br/>REST + Code Search"]
+        MCPS[("N × 下游 MCP server<br/>stdio / http / sse")]
     end
 
-    Hook -- HTTP --> API
+    Hook -- HTTP /v1/recommend --> API
+    CLI_CMD -- HTTP --> API
+    WEB -- HTTP /api/* --> API
+    GW -- HTTP /v1/artifacts?type=mcp&active=true --> API
+    CC -- MCP stdio --> GW
+    GW -- JSON-RPC stdio --> MCPS
     RNK -. 二选一 .-> OLLAMA
     RNK -. 二选一 .-> HAIKU
+    TAGGER -. 同一后端池 .-> OLLAMA
+    TAGGER -. 同一后端池 .-> HAIKU
     ING --> GH
     DISC --> GH
 
-    classDef external fill:#fef3c7,stroke:#92400e
-    classDef fallback fill:#fee2e2,stroke:#991b1b,stroke-dasharray:5 5
-    class OLLAMA,HAIKU,GH external
+    classDef external fill:#F2E4CC,stroke:#A26F1E,color:#0E1116
+    classDef fallback fill:#F2DBD8,stroke:#9B2B22,color:#0E1116,stroke-dasharray:5 5
+    classDef brand fill:#EAF3F0,stroke:#0E5C4A,color:#0E1116
+    classDef ui fill:#FCFBF8,stroke:#3D424C,color:#0E1116
+    class OLLAMA,HAIKU,GH,MCPS external
     class FB fallback
+    class WEB,GW,API brand
+    class Hook,CLI_CMD,CC ui
