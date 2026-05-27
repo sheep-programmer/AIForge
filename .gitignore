@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.local
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.coverage.*
+
+# Data
+server/data/
+plugin/local-fallback/*.sqlite*
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Models (downloaded at runtime)
+.cache/
+.hf_cache/
+models/
+
+# Build artifacts
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.npm/
+
+# Runtime state
+server/session-state.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+logs/

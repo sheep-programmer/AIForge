@@ -1,0 +1,52 @@
+%% 入库路径时序图：从 POST /v1/ingest 到 skill 可被推荐
+
+sequenceDiagram
+    autonumber
+    participant Admin as 管理员/CLI
+    participant API as Skillforge API
+    participant Pipe as IngestPipeline
+    participant Git as git clone
+    participant Parser as frontmatter parser
+    participant Emb as Embedder
+    participant DB as SQLite + vss
+    participant GH as GitHub REST API
+
+    Admin->>API: POST /v1/ingest<br/>{github_url, branch}
+    API->>Pipe: ingest(github_url, branch, session)
+    activate Pipe
+
+    Pipe->>DB: 同步：创建 IngestJob(status=pending)
+    DB-->>Pipe: job_id
+    Pipe->>API: 返回 IngestResponse
+    Pipe-)Pipe: asyncio.create_task(run_job)<br/>持强引用避免 GC
+
+    API-->>Admin: 202 + job_id
+
+    Note over Pipe,DB: 以下在线程池异步进行
+
+    Pipe->>DB: status: fetching
+    Pipe->>Git: shallow clone (depth=1)
+    Git-->>Pipe: temp dir
+    Pipe->>GH: GET /repos/{owner}/{repo}
+    GH-->>Pipe: stars
+
+    Pipe->>DB: status: parsing
+    Pipe->>Parser: 递归扫描 **/SKILL.md
+    Parser-->>Pipe: ParsedSkill[]
+
+    Pipe->>DB: status: embedding
+    Pipe->>Emb: embed_batch([name + description])
+    Emb-->>Pipe: vectors
+
+    loop 每个 ParsedSkill
+        Pipe->>DB: upsert Skill(id=sha256[:16])
+        Pipe->>DB: upsert_embedding(rowid, vec)
+    end
+
+    Pipe->>DB: status: done<br/>skills_added/updated counters
+
+    Note over Pipe: 任何阶段异常 → status=error<br/>error 字段记 traceback
+    deactivate Pipe
+
+    Admin->>API: GET /v1/ingest/{job_id}
+    API-->>Admin: status + counts

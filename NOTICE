@@ -1,0 +1,19 @@
+Skillforge
+Copyright 2026 Skillforge contributors
+
+This product includes software developed by the Skillforge contributors
+(see https://github.com/skillforge/skillforge).
+
+Licensed under the Apache License, Version 2.0.
+
+Third-party components used at runtime (each under its own license):
+- sentence-transformers (Apache-2.0)
+- sqlite-vss (MIT)
+- FastAPI (MIT)
+- SQLAlchemy (MIT)
+- Pydantic (MIT)
+- Anthropic Python SDK (MIT, optional)
+- Alembic (MIT)
+- Ollama (MIT, runtime dependency, not bundled)
+
+See server/pyproject.toml for the complete dependency tree and exact versions.

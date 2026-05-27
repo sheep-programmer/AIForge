@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Skillforge UserPromptSubmit hook 入口
+# 把 Claude Code 通过 stdin 投递的 JSON 转交给 Python 主逻辑。
+# 任何异常都不应阻塞用户提问，所以这里不开 -e。
+set -uo pipefail
+
+exec "${SKILLFORGE_PYTHON:-python3}" "${CLAUDE_PLUGIN_ROOT}/lib/hook_entry.py"

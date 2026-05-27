@@ -1,0 +1,40 @@
+# AIForge 推荐入库的流行公开 skill 仓库
+#
+# 给 server/scripts/seed_skills.py 使用：
+#   python server/scripts/seed_skills.py --from-file examples/popular-skills.yaml
+#
+# 你可以拷贝此文件并自行裁剪。每个条目都是一个独立的 GitHub 仓库。
+#
+# 字段：
+#   url         (必填) 仓库 HTTPS URL
+#   branch      (可选) 分支，默认 main
+#   description (可选) 人类可读说明，仅供本文件参考
+
+skills:
+  - url: https://github.com/obra/superpowers-skills
+    branch: main
+    description: Jesse Vincent 的 superpowers 核心 skill 库
+
+  - url: https://github.com/anthropics/skills
+    branch: main
+    description: Anthropic 官方 skill 仓库
+
+  - url: https://github.com/pbakaus/impeccable
+    branch: main
+    description: Paul Bakaus 的 impeccable skill 集合
+
+  - url: https://github.com/garrytan/gstack
+    branch: main
+    description: Garry Tan 的 gstack 工作流 skill
+
+  - url: https://github.com/lijigang/ljg-skills
+    branch: main
+    description: lijigang 的中文 skill 整理
+
+  - url: https://github.com/vercel-labs/skills
+    branch: main
+    description: Vercel Labs 的实验性 skill
+
+  - url: https://github.com/affaan-m/everything-claude-code
+    branch: main
+    description: affaan-m 收集的 Claude Code 全家桶 skill

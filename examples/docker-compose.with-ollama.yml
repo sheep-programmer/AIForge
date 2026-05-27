@@ -1,0 +1,89 @@
+# 带本地 Ollama reranker 的完整 docker-compose
+#
+# 启动：
+#   docker compose -f examples/docker-compose.with-ollama.yml up -d
+#
+# 首次启动后必须拉 Qwen 模型：
+#   docker compose -f examples/docker-compose.with-ollama.yml exec ollama \
+#     ollama pull qwen2.5:1.5b
+#
+# 想用 3B / 7B 模型？改下面 AIFORGE_RERANKER_MODEL 即可，但留意 RAM 需求
+
+name: aiforge
+
+services:
+  aiforge:
+    build:
+      context: ../server
+      dockerfile: docker/Dockerfile
+    image: aiforge:local
+    container_name: aiforge
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - ../server/docker/data:/app/data
+    environment:
+      AIFORGE_HOST: "0.0.0.0"
+      AIFORGE_PORT: "8765"
+      AIFORGE_DB_PATH: "/app/data/aiforge.db"
+      AIFORGE_RERANKER: "ollama"
+      AIFORGE_RERANKER_MODEL: "qwen2.5:1.5b"
+      AIFORGE_OLLAMA_HOST: "http://ollama:11434"
+      AIFORGE_LOG_FORMAT: "json"
+      # 可选 Bearer 鉴权
+      # AIFORGE_API_KEY: "changeme"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8765/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - aiforge-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: aiforge-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    # 仅排障时把 11434 暴露到 host
+    # ports:
+    #   - "127.0.0.1:11434:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: "30m"        # 模型常驻 30 分钟
+      OLLAMA_NUM_PARALLEL: "2"
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list | grep -q . || exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - aiforge-net
+
+  # 一次性 sidecar：启动后拉模型，pull 完即退出
+  # 想避免手动 `ollama pull` 可以启用它（取消注释 + 改 depends_on）
+  # ollama-init:
+  #   image: ollama/ollama:latest
+  #   container_name: aiforge-ollama-init
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   entrypoint: ["/bin/sh", "-c"]
+  #   command: |
+  #     OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:1.5b
+  #   restart: "no"
+  #   networks:
+  #     - aiforge-net
+
+networks:
+  aiforge-net:
+    driver: bridge
+
+volumes:
+  ollama-models:

@@ -1,0 +1,51 @@
+%% 推荐路径时序图：一次 user prompt 的完整生命周期
+
+sequenceDiagram
+    autonumber
+    participant User as 用户
+    participant CC as Claude Code
+    participant Hook as Hook (Python)
+    participant API as Skillforge API
+    participant Pipe as recommend pipeline
+    participant DB as SQLite + vss
+    participant LLM as Reranker (Qwen/Haiku)
+
+    User->>CC: 提交 prompt
+    CC->>Hook: UserPromptSubmit (stdin JSON)
+    activate Hook
+    Hook->>API: POST /v1/recommend<br/>{prompt, top_k=3}
+    activate API
+    API->>Pipe: recommend(prompt, db_session)
+    activate Pipe
+
+    Pipe->>Pipe: 1. embed(prompt) → 384 维向量
+    Pipe->>DB: 2. vss_search(vec, k=30)
+    DB-->>Pipe: 30 个候选 + L2 距离
+    Pipe->>DB: 加载候选 Skill ORM 行
+    DB-->>Pipe: skills[]
+    Pipe->>Pipe: 3. dedup（聚类 + 代表选择）
+
+    alt reranker 可用
+        Pipe->>LLM: 4. rerank(prompt, candidates)
+        LLM-->>Pipe: 排好序的 candidates + reasons
+    else 超时/失败
+        Pipe->>Pipe: 降级：embedding-only 排序<br/>fallback_used=True
+    end
+
+    Pipe->>Pipe: 5. token 预算裁剪
+    Pipe->>DB: 写 RecommendationLog<br/>bump recommend_count
+    Pipe-->>API: RecommendResponse
+    deactivate Pipe
+    API-->>Hook: 200 OK + JSON
+    deactivate API
+
+    alt 服务端可达
+        Hook->>Hook: 渲染 <skillforge-recommendations>
+    else 服务端超时 (>250ms)
+        Hook->>Hook: 本地兜底（缓存 SQLite + BM25）<br/>每 session 警告一次
+    end
+
+    Hook->>CC: stdout: {hookSpecificOutput: {additionalContext}}
+    deactivate Hook
+    CC->>CC: 将 skill 内容注入 prompt 上下文
+    CC->>User: 用 agent 处理 prompt（已带最相关 skill）

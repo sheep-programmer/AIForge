@@ -1,0 +1,85 @@
+# Skillforge systemd 单元
+#
+# 安装：
+#   sudo useradd --system --home /opt/skillforge --shell /usr/sbin/nologin skillforge
+#   sudo cp -r <你 clone 的目录>/* /opt/skillforge/
+#   sudo chown -R skillforge:skillforge /opt/skillforge
+#   sudo -u skillforge bash -c 'cd /opt/skillforge/server && uv sync'
+#   sudo cp /opt/skillforge/examples/systemd/skillforge.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now skillforge
+#
+# 查看：
+#   systemctl status skillforge
+#   journalctl -u skillforge -f
+
+[Unit]
+Description=Skillforge —— skill router for AI coding agents
+Documentation=https://github.com/skillforge/skillforge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=skillforge
+Group=skillforge
+WorkingDirectory=/opt/skillforge/server
+
+# 环境变量
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=SKILLFORGE_HOST=127.0.0.1
+Environment=SKILLFORGE_PORT=8765
+Environment=SKILLFORGE_DB_PATH=/var/lib/skillforge/skillforge.db
+Environment=SKILLFORGE_LOG_FORMAT=json
+EnvironmentFile=-/etc/skillforge/skillforge.env
+
+# 启动命令（用 uv 跑 venv 内的 uvicorn）
+ExecStart=/usr/local/bin/uv run --project /opt/skillforge/server \
+    uvicorn skillforge.main:app --host ${SKILLFORGE_HOST} --port ${SKILLFORGE_PORT}
+
+# 优雅停止：给 30s 让 reranker 完成正在跑的请求
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+# 重启策略
+Restart=always
+RestartSec=5s
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# ---- 资源限制 ----
+LimitNOFILE=65535
+MemoryMax=3G              # 含 ollama 时调大；纯 embedder 600M 够
+TasksMax=512
+
+# ---- 安全硬化 ----
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelLogs=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false   # 必须留 false：ML 推理需要 W+X
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# 只允许写这两个目录
+ReadWritePaths=/var/lib/skillforge /var/log/skillforge
+
+# 临时文件
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

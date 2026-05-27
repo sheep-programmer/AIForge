@@ -1,0 +1,60 @@
+# 不要把这些东西拷进 build context
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# 测试 / 缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.coverage.*
+tests/
+
+# 数据
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 模型缓存（构建时会重新下载到镜像层）
+.cache/
+.hf_cache/
+models/
+
+# 构建产物
+dist/
+build/
+
+# 文档 / 元信息
+docs/
+*.md
+!README.md
+LICENSE
+CHANGELOG*
+CODE_OF_CONDUCT*
+CONTRIBUTING*
+SECURITY*
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Docker 自身
+docker-compose*.yml
+Dockerfile*
+.dockerignore

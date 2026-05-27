@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Editorial Engineering 设计语言
+ * Parchment ground · Graphite ink · Oxide green accent
+ * Display: Fraunces (variable serif) · Body: Geist Sans · Code: JetBrains Mono
+ */
+
+@layer base {
+  :root {
+    --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+    --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* 细网格背景每 32px 一格，对齐设计稿 */
+    --grid: 32px;
+
+    /* 选择高亮 */
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    /* tabular numerics 全局开启 */
+    font-variant-numeric: tabular-nums;
+  }
+
+  body {
+    @apply bg-parchment-100 text-ink-800;
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(14, 92, 74, 0.04), transparent 40%),
+      radial-gradient(circle at 100% 0%, rgba(31, 63, 111, 0.025), transparent 35%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(14, 92, 74, 0.18);
+    color: #0E1116;
+  }
+
+  /* 字符级排版 */
+  .display {
+    font-family: var(--font-display);
+    font-feature-settings: 'ss01', 'ss02', 'ss03';
+    letter-spacing: -0.02em;
+    font-optical-sizing: auto;
+  }
+
+  /* 数据排版：极窄行高 + 等宽 */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'ss01';
+  }
+
+  /* 标签字体: 大写 + 字间距 */
+  .label {
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #7E828B;
+  }
+
+  /* 滚动条精细化 */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(14, 17, 22, 0.12);
+    border-radius: 8px;
+    border: 2px solid #FAFAF7;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 17, 22, 0.24);
+  }
+}
+
+@layer components {
+  /* 顶级表面：白底卡片 + 极细描边 */
+  .surface {
+    @apply bg-card rounded-md;
+    box-shadow:
+      0 0 0 1px rgba(14, 17, 22, 0.07),
+      0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  }
+
+  /* 强化表面（用于关键 panel） */
+  .surface-strong {
+    @apply bg-card rounded-md;
+    box-shadow:
+      0 0 0 1px rgba(14, 17, 22, 0.1),
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 12px 32px -24px rgba(14, 17, 22, 0.16);
+  }
+
+  /* 极细 divider */
+  .hairline {
+    border-color: rgba(14, 17, 22, 0.08);
+  }
+
+  /* 节标题：左侧大写小标签 + 右侧分隔线 */
+  .eyebrow {
+    @apply label flex items-center gap-3 mb-3;
+  }
+  .eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      rgba(14, 17, 22, 0.12),
+      transparent
+    );
+  }
+
+  /* 状态圆点（带辉光） */
+  .dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full align-middle;
+  }
+  .dot-live {
+    @apply animate-pulse-dot;
+    background: #1F7E64;
+    box-shadow: 0 0 0 4px rgba(63, 199, 154, 0.18);
+  }
+
+  /* 渐变发光按钮（hover） */
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-oxide-400 focus-visible:ring-offset-2 focus-visible:ring-offset-parchment-100;
+  }
+
+  /* 单元格分隔线（极细），表格用 */
+  .cell-row {
+    @apply border-b border-ink-100/60 hover:bg-parchment-200/50 transition-colors;
+  }
+
+  /* 印章样式的小角标（artifact-type badge 等） */
+  .stamp {
+    @apply inline-flex items-center gap-1.5 px-1.5 h-5 rounded-sm font-mono text-2xs uppercase tracking-wider;
+    box-shadow: inset 0 0 0 1px currentColor;
+    color: currentColor;
+  }
+}
+
+/* 通过 link 标签引入 Fraunces / Geist / JetBrains Mono webfont
+ * （在 layout.tsx 内 next/font 直接加载，避免外网请求）
+ */

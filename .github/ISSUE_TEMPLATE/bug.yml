@@ -1,0 +1,99 @@
+name: Bug 报告 / Bug report
+description: 报告一个 AIForge 的问题 / Report a AIForge problem
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告 bug！请尽量填完下方信息，**最有帮助的是可复现步骤**。
+        Thanks for filing a bug. The most useful field is the reproduction steps.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么 / What happened
+      description: 描述你看到的现象 / Describe what you observed.
+      placeholder: |
+        例：调用 /v1/recommend 返回 500，日志里有 ...
+        e.g. /v1/recommend returns 500, logs show ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为 / Expected behavior
+      placeholder: |
+        例：应该返回 top-3 skill 列表
+        e.g. should return top-3 skills
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 包含完整的 curl 命令 / config / prompt 文本 / Include full curl commands, config, prompt text.
+      placeholder: |
+        1. docker compose up -d
+        2. curl -X POST http://localhost:8765/v1/ingest -d '...'
+        3. curl -X POST http://localhost:8765/v1/recommend -d '...'
+      render: bash
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 涉及组件 / Component
+      options:
+        - server / recommender
+        - server / ingestion
+        - server / discovery
+        - plugin / hook
+        - plugin / fallback
+        - docker / deployment
+        - docs
+        - 其他 / other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / Version
+      description: aiforge --version 或 git commit / output of `aiforge --version` or git commit
+      placeholder: "v0.1.0 / commit abc123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境 / Environment
+      description: OS、Python 版本、Docker 版本、reranker 后端 / OS, Python version, Docker version, reranker backend
+      placeholder: |
+        OS: Ubuntu 24.04
+        Python: 3.12.7
+        Docker: 27.3.1
+        Reranker: ollama (qwen2.5:1.5b)
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs
+      description: 相关日志输出，**移除任何敏感信息** / Relevant log output, **redact secrets**.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 检查项 / Checklist
+      options:
+        - label: 我已搜索过现有 issue / I searched existing issues
+          required: true
+        - label: 我使用的是受支持的版本（最新 main 或最新 release）/ I am on a supported version
+          required: true

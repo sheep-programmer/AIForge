@@ -1,0 +1,23 @@
+{
+  "name": "aiforge",
+  "version": "0.1.0",
+  "description": "为 Claude Code 智能推荐和注入最相关的 skill",
+  "author": "AIForge contributors",
+  "homepage": "https://github.com/aiforge/aiforge",
+  "hooks": {
+    "UserPromptSubmit": "${CLAUDE_PLUGIN_ROOT}/hooks/on-user-prompt"
+  },
+  "commands": [
+    "commands/status.md",
+    "commands/add.md",
+    "commands/search.md",
+    "commands/sync.md",
+    "commands/config.md",
+    "commands/list.md",
+    "commands/install.md",
+    "commands/uninstall.md",
+    "commands/tag.md",
+    "commands/autotag.md"
+  ],
+  "skills": ["skills/aiforge/SKILL.md"]
+}

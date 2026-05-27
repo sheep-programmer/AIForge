@@ -1,0 +1,71 @@
+# AIForge 默认 docker-compose
+#
+# 启动：
+#   docker compose -f server/docker/docker-compose.yml up -d
+# 查看：
+#   docker compose -f server/docker/docker-compose.yml logs -f aiforge
+# 停止：
+#   docker compose -f server/docker/docker-compose.yml down
+#
+# 想要本地小模型重排？参见 ../../examples/docker-compose.with-ollama.yml
+
+name: aiforge
+
+services:
+  aiforge:
+    build:
+      context: ..                         # server/
+      dockerfile: docker/Dockerfile
+    image: aiforge:local
+    container_name: aiforge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"             # 默认只暴露到 127.0.0.1，公网需走 nginx
+    volumes:
+      - ./data:/app/data                  # SQLite 持久化到宿主机
+    environment:
+      AIFORGE_HOST: "0.0.0.0"
+      AIFORGE_PORT: "8765"
+      AIFORGE_DB_PATH: "/app/data/aiforge.db"
+      AIFORGE_RERANKER: "none"         # 默认无 reranker；接入 ollama 见下方注释
+      AIFORGE_LOG_FORMAT: "json"
+      # AIFORGE_API_KEY: "changeme"    # 取消注释打开 Bearer 鉴权
+      # AIFORGE_GITHUB_TOKEN: "ghp_..."# 私有仓库 / 提高 rate limit
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8765/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - aiforge-net
+
+  # -------------------------------------------------------------------------
+  # 可选：本地 Ollama，用 Qwen2.5-1.5B 做重排
+  #
+  # 启用步骤：
+  #   1. 取消下面的整段注释
+  #   2. 在 aiforge.environment 设置：
+  #        AIFORGE_RERANKER: "ollama"
+  #        AIFORGE_RERANKER_MODEL: "qwen2.5:1.5b"
+  #        AIFORGE_OLLAMA_HOST: "http://ollama:11434"
+  #   3. 首次启动后拉模型：
+  #        docker compose exec ollama ollama pull qwen2.5:1.5b
+  # -------------------------------------------------------------------------
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: aiforge-ollama
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ollama-models:/root/.ollama
+  #   # ports:
+  #   #   - "127.0.0.1:11434:11434"   # 仅调试需要
+  #   networks:
+  #     - aiforge-net
+
+networks:
+  aiforge-net:
+    driver: bridge
+
+# volumes:
+#   ollama-models:

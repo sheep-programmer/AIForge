@@ -1,0 +1,27 @@
+# Skillforge 代码所有者
+#
+# 顺序由后到前匹配：最后一条匹配的规则生效。
+# 关于格式：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 默认：项目维护者
+*                                       @skillforge-maintainers
+
+# 服务端核心
+/server/                                @skillforge-maintainers
+/server/src/skillforge/recommender/     @skillforge-maintainers
+/server/src/skillforge/ingestion/       @skillforge-maintainers
+/server/src/skillforge/discovery/       @skillforge-maintainers
+
+# 插件
+/plugin/                                @skillforge-maintainers
+
+# CI / 打包 / 部署
+/.github/                               @skillforge-maintainers
+/server/docker/                         @skillforge-maintainers
+/examples/                              @skillforge-maintainers
+
+# 文档（架构契约必须 review）
+/docs/architecture.md                   @skillforge-maintainers
+/docs/architecture.en.md                @skillforge-maintainers
+/README.md                              @skillforge-maintainers
+/README.en.md                           @skillforge-maintainers

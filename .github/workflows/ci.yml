@@ -1,0 +1,141 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 同一 PR 内取消旧 run，节省 actions 配额
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Lint + typecheck
+  # ---------------------------------------------------------------------------
+  lint:
+    name: lint (ruff + mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
+          cache-dependency-glob: "server/pyproject.toml"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: ruff check
+        run: uv run ruff check src tests
+
+      - name: ruff format --check
+        run: uv run ruff format --check src tests
+
+      - name: mypy
+        run: uv run mypy src
+
+  # ---------------------------------------------------------------------------
+  # 2. Tests
+  # ---------------------------------------------------------------------------
+  test:
+    name: tests (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: server
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
+          cache-dependency-glob: "server/pyproject.toml"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --python ${{ matrix.python-version }}
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-minilm-l6-v2
+
+      - name: Run pytest
+        env:
+          AIFORGE_RERANKER: none
+          AIFORGE_DB_PATH: ":memory:"
+        run: uv run pytest -q --cov=aiforge --cov-report=xml
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: server/coverage.xml
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 3. Docker 构建（验证 Dockerfile 不破，不 push）
+  # ---------------------------------------------------------------------------
+  docker-build:
+    name: docker build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: server
+          file: server/docker/Dockerfile
+          push: false
+          load: true
+          tags: aiforge:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test —— 镜像能跑起来
+        run: |
+          docker run --rm -d --name sf-ci -p 8765:8765 \
+            -e AIFORGE_RERANKER=none aiforge:ci
+          # 给冷启动一点时间（模型加载）
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/v1/health; then
+              echo "health ok"
+              docker rm -f sf-ci
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health check failed"
+          docker logs sf-ci || true
+          docker rm -f sf-ci
+          exit 1

@@ -1,0 +1,70 @@
+%% Skillforge 总体架构图
+%% 渲染：mermaid CLI 或 GitHub 自动渲染
+%% 中英对照：节点用中文标签，技术细节标注英文术语
+
+flowchart TB
+    subgraph CC["Claude Code (用户终端)"]
+        UPS["UserPromptSubmit 事件"]
+        Hook["on-user-prompt Hook"]
+        FB[("本地兜底 SQLite<br/>BM25 索引")]
+        UPS --> Hook
+        Hook -.超时切换.-> FB
+    end
+
+    subgraph SRV["Skillforge 服务端"]
+        direction TB
+        API["FastAPI HTTP API<br/>/v1/recommend · /v1/ingest · /v1/admin"]
+
+        subgraph REC["推荐管线 (recommender/)"]
+            direction LR
+            EMB["Embedder<br/>all-MiniLM-L6-v2"]
+            RET["Retriever<br/>vss_search top-30"]
+            DED["Deduper<br/>Agglomerative<br/>cosine 0.15"]
+            RNK["Reranker<br/>Qwen-1.5B / Haiku / none"]
+            BUD["Token Budgeter"]
+            EMB --> RET --> DED --> RNK --> BUD
+        end
+
+        subgraph ING["入库管线 (ingestion/)"]
+            direction LR
+            CLN["git clone --depth=1"]
+            PARS["frontmatter 解析"]
+            SPL["多 skill 拆分"]
+            CLN --> PARS --> SPL
+        end
+
+        subgraph DISC["远程发现 (discovery/) · 默认关闭"]
+            direction LR
+            FIND["GitHub Code/Repo Search"]
+            SCORE["质量打分"]
+            APPR["审批队列<br/>(人工批准)"]
+            FIND --> SCORE --> APPR
+        end
+
+        DB[("SQLite + sqlite-vss<br/>skills · ingest_jobs<br/>pending_discoveries<br/>recommendation_logs")]
+
+        API --> REC
+        API --> ING
+        API --> DISC
+        REC <--> DB
+        ING --> DB
+        DISC --> DB
+        APPR -. approve .-> ING
+    end
+
+    subgraph EXT["外部依赖 (可选)"]
+        OLLAMA["Ollama<br/>Qwen-1.5B"]
+        HAIKU["Anthropic API<br/>Claude Haiku"]
+        GH["GitHub<br/>REST + Code Search"]
+    end
+
+    Hook -- HTTP --> API
+    RNK -. 二选一 .-> OLLAMA
+    RNK -. 二选一 .-> HAIKU
+    ING --> GH
+    DISC --> GH
+
+    classDef external fill:#fef3c7,stroke:#92400e
+    classDef fallback fill:#fee2e2,stroke:#991b1b,stroke-dasharray:5 5
+    class OLLAMA,HAIKU,GH external
+    class FB fallback
