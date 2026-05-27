@@ -155,7 +155,9 @@ jobs:
       - name: Build (no push)
         uses: docker/build-push-action@v6
         with:
-          context: server
+          # 用仓库根做 context —— pyproject.toml 里 readme = "../README.md"
+          # 需要把 README 也带进 build context
+          context: .
           file: server/docker/Dockerfile
           push: false
           load: true
@@ -165,18 +167,18 @@ jobs:
 
       - name: Smoke test —— 镜像能跑起来
         run: |
-          docker run --rm -d --name sf-ci -p 8765:8765 \
+          docker run --rm -d --name aiforge-ci -p 8765:8765 \
             -e AIFORGE_RERANKER=none aiforge:ci
           # 给冷启动一点时间（模型加载）
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8765/v1/health; then
               echo "health ok"
-              docker rm -f sf-ci
+              docker rm -f aiforge-ci
               exit 0
             fi
             sleep 2
           done
           echo "health check failed"
-          docker logs sf-ci || true
-          docker rm -f sf-ci
+          docker logs aiforge-ci || true
+          docker rm -f aiforge-ci
           exit 1

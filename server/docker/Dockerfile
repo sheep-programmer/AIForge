@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.7
 #
-# Skillforge 服务端 —— 多阶段构建
+# AIForge 服务端 —— 多阶段构建
 # Stage 1: uv 把依赖装到隔离的 venv
 # Stage 2: 最小运行时镜像，预下载 sentence-transformers 权重
 #
-# 构建：
-#   docker build -f server/docker/Dockerfile -t skillforge:dev server
+# 构建（context 必须是仓库根，因为 pyproject 引用 ../README.md）：
+#   docker build -f server/docker/Dockerfile -t aiforge:dev .
 # 运行：
-#   docker run --rm -p 8765:8765 -v $(pwd)/data:/app/data skillforge:dev
+#   docker run --rm -p 8765:8765 -v $(pwd)/data:/app/data aiforge:dev
 
 # -----------------------------------------------------------------------------
 # Stage 1 —— builder
@@ -34,9 +34,10 @@ RUN apt-get update \
 WORKDIR /build
 
 # 只先复制依赖清单，最大化层缓存
-COPY pyproject.toml ./
-COPY README.md ../README.md
-# README 在父目录被 pyproject 引用；用 . 仓库根作为 build context 时这一行可去掉
+# build context = 仓库根；server/pyproject.toml 引用 ../README.md，
+# 所以把 server/ 放在 /build/server/，README 放到 /build/ 与之并列
+COPY server/pyproject.toml ./server/pyproject.toml
+COPY README.md ./README.md
 
 # 创建 venv 并安装依赖（不装项目本身，那是下一步）
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -61,7 +62,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         anthropic>=0.40
 
 # 复制源码并安装项目（editable=False，生产模式）
-COPY src ./src
+COPY server/src ./server/src
+WORKDIR /build/server
 RUN --mount=type=cache,target=/root/.cache/uv \
     VIRTUAL_ENV=/opt/venv uv pip install --python /opt/venv/bin/python --no-deps .
 
@@ -76,20 +78,22 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     VIRTUAL_ENV=/opt/venv \
     HF_HOME=/opt/hf-cache \
     SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache \
-    SKILLFORGE_HOST=0.0.0.0 \
-    SKILLFORGE_PORT=8765 \
-    SKILLFORGE_DB_PATH=/app/data/skillforge.db \
-    SKILLFORGE_EMBEDDER_MODEL=sentence-transformers/all-MiniLM-L6-v2 \
-    SKILLFORGE_LOG_FORMAT=json
+    AIFORGE_HOST=0.0.0.0 \
+    AIFORGE_PORT=8765 \
+    AIFORGE_DB_PATH=/app/data/aiforge.db \
+    AIFORGE_EMBEDDER_MODEL=sentence-transformers/all-MiniLM-L6-v2 \
+    AIFORGE_LOG_FORMAT=json
 
-# 运行时只需要 curl（healthcheck）和 ca-certificates（HTTPS 出站）
+# 运行时需要 curl（healthcheck）+ ca-certificates（HTTPS 出站）+ libblas/liblapack（sqlite-vss FAISS）
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
         libgomp1 \
+        libblas3 \
+        liblapack3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --shell /bin/bash --uid 1000 skillforge
+    && useradd --create-home --shell /bin/bash --uid 1000 aiforge
 
 # 复制 venv
 COPY --from=builder /opt/venv /opt/venv
@@ -97,16 +101,16 @@ COPY --from=builder /opt/venv /opt/venv
 # 预下载 all-MiniLM-L6-v2 权重（~90MB），让冷启动 < 3s
 # 注意：这一步让镜像变大，但生产部署省下首次启动的下载等待
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', cache_folder='/opt/hf-cache')" \
-    && chown -R skillforge:skillforge /opt/hf-cache
+    && chown -R aiforge:aiforge /opt/hf-cache
 
 WORKDIR /app
-RUN mkdir -p /app/data && chown -R skillforge:skillforge /app
+RUN mkdir -p /app/data && chown -R aiforge:aiforge /app
 
-USER skillforge
+USER aiforge
 
 EXPOSE 8765
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8765/v1/health || exit 1
 
-ENTRYPOINT ["uvicorn", "skillforge.main:app", "--host", "0.0.0.0", "--port", "8765"]
+ENTRYPOINT ["uvicorn", "aiforge.main:app", "--host", "0.0.0.0", "--port", "8765"]

@@ -1,0 +1,81 @@
+# 仓库根 .dockerignore —— docker build context = repo root
+# 排除大文件 / 不需要进镜像的目录
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/out/
+**/.turbo/
+**/.npm/
+**/*.tsbuildinfo
+
+# Python 缓存
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/.venv-test/
+**/.venv-ci/
+**/venv/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/htmlcov/
+**/.coverage*
+**/*.egg-info/
+
+# 数据 / DB
+**/data/
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+
+# 模型缓存
+**/.cache/
+**/.hf_cache/
+**/models/
+
+# 构建产物
+**/dist/
+**/build/
+server/.venv*
+
+# 文档 / 媒体（README.md 需要保留）
+docs/
+*.md
+!README.md
+LICENSE
+NOTICE
+CHANGELOG*
+CODE_OF_CONDUCT*
+CONTRIBUTING*
+SECURITY*
+SUPPORT*
+CITATION*
+
+# 环境 / 配置
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# 测试
+**/tests/
+**/test/
+
+# Web 源码（运行时 server 用不上 web/）
+web/
+plugin/
+examples/
+memory/
