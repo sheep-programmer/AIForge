@@ -6,15 +6,11 @@
 from __future__ import annotations
 
 import threading
-from typing import TYPE_CHECKING
 
 import numpy as np
 import structlog
 
 from aiforge.config import Settings, get_settings
-
-if TYPE_CHECKING:
-    from sentence_transformers import SentenceTransformer
 
 logger = structlog.get_logger(__name__)
 
@@ -34,7 +30,7 @@ class Embedder:
         self._dim = s.embedder_dim
         logger.info("embedder.loading", model=self._model_name)
         # device="cpu" 是默认；显式声明避免在无 GPU 的 VPS 上偶发 CUDA 探测
-        self._model: SentenceTransformer = SentenceTransformer(self._model_name, device="cpu")
+        self._model = SentenceTransformer(self._model_name, device="cpu")
         # 启动期跑一次 dummy 推理把 ONNX/torch 算子图编译热好
         self._model.encode(["warmup"], show_progress_bar=False)
         logger.info("embedder.ready", model=self._model_name, dim=self._dim)

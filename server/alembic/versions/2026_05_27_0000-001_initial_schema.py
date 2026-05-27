@@ -15,6 +15,10 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
+# alembic 在 ScriptDirectory.walk_revisions 时按模块属性读取下面四个名字，
+# 看起来"未使用"实则是 alembic 的反射式必需元数据。
+__all__ = ["revision", "down_revision", "branch_labels", "depends_on", "upgrade", "downgrade"]
+
 revision: str = "001"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None

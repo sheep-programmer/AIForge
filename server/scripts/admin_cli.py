@@ -42,7 +42,6 @@ from _common import (
     render_table,
 )
 
-
 # ---------- skills 子命令 ----------
 
 def cmd_skills_list(client: HTTPClient, args: argparse.Namespace) -> int:

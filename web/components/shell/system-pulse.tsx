@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronUp,
   Cpu,
-  Database,
   Gauge,
   HardDrive,
   Network,

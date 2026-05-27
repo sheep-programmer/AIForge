@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sys
@@ -110,11 +111,10 @@ class HTTPClient:
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8", errors="replace") if e.fp else ""
             detail = err_body
-            try:
+            # err_body 可能不是 JSON（502 HTML 页等）；解析失败就直接用原文
+            with contextlib.suppress(Exception):
                 parsed = json.loads(err_body)
                 detail = parsed.get("detail", err_body)
-            except Exception:
-                pass
             raise APIError(
                 f"服务端返回 HTTP {e.code} ({method} {path})：{detail}"
             ) from None

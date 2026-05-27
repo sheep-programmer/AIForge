@@ -6,14 +6,6 @@ import { useState } from 'react';
 import { Check, Copy, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface McpConfigShape {
-  transport?: string;
-  command?: string;
-  args?: string[];
-  env?: Record<string, string>;
-  url?: string;
-}
-
 interface McpConfigBlockProps {
   name: string;
   config: Record<string, unknown>;

@@ -185,7 +185,7 @@ def main() -> int:
 
     if failures:
         print()
-        print(Color.yellow(f"== 失败样本（前 5 条）=="))
+        print(Color.yellow("== 失败样本（前 5 条）=="))
         for msg in failures[:5]:
             print(f"  - {msg}")
 

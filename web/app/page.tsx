@@ -14,7 +14,7 @@ import {
   Wand2,
   Zap,
 } from 'lucide-react';
-import { fetcher, api } from '@/lib/api-client';
+import { fetcher } from '@/lib/api-client';
 import type { ArtifactListResponse, HealthResponse, TagListResponse } from '@/lib/api-types';
 import {
   MOCK_ARTIFACTS,
@@ -26,9 +26,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Surface } from '@/components/ui/surface';
 import { Stat } from '@/components/ui/stat';
 import { Button } from '@/components/ui/button';
-import { ArtifactTypeBadge, Badge, StatusDot, TagChip } from '@/components/ui/badge';
+import { ArtifactTypeBadge, TagChip } from '@/components/ui/badge';
 import { HelpTip } from '@/components/ui/help-tip';
-import { fmtNumber, fmtRelativeTime, truncate } from '@/lib/utils';
+import { fmtNumber, fmtRelativeTime } from '@/lib/utils';
 import { Reactor } from '@/components/dashboard/reactor';
 import { ThroughputChart } from '@/components/dashboard/throughput-chart';
 import { TypeMix } from '@/components/dashboard/type-mix';

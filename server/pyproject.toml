@@ -62,15 +62,17 @@ packages = ["src/aiforge"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["src", "tests"]
+# scripts/ 与 alembic/ 也走 ruff，避免 unused-import / suppressible-try-except 在脚本里复发
+src = ["src", "tests", "scripts", "alembic"]
+extend-exclude = ["alembic/versions/*"]  # 迁移文件由 __all__ 标记元数据，跳过 F401 噪音
 
 [tool.ruff.lint]
 select = [
-    "E", "F", "W",  # pycodestyle + pyflakes
+    "E", "F", "W",  # pycodestyle + pyflakes（含 F401 unused-import / F841 unused-variable）
     "I",            # isort
     "B",            # bugbear
     "UP",           # pyupgrade
-    "SIM",          # simplify
+    "SIM",          # simplify（含 SIM105 suppressible-try-except-pass）
     "TID",          # tidy imports
     "RUF",          # ruff
 ]
@@ -87,6 +89,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # 测试里允许更宽松的异常断言
 "tests/*" = ["B017"]
+# scripts/_common.py 给所有兄弟脚本做相对导入，且 die()/Color 等是按需被引用的工具盒
+"scripts/_common.py" = ["F401"]
 
 [tool.mypy]
 python_version = "3.11"

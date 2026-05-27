@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures as cf
+import contextlib
 import sys
 import threading
 import time
@@ -106,14 +107,12 @@ class Progress:
         line = (
             f"\r[{bar}] {self.done}/{self.total}  失败 {self.failed}{active}"
         )
-        # 截到终端宽度（避免 wrap）
-        try:
+        # 截到终端宽度（避免 wrap）；非 TTY / 异常环境直接保留原 line
+        with contextlib.suppress(Exception):
             import shutil
             cols = shutil.get_terminal_size().columns
             if len(line) > cols:
                 line = line[: cols - 1]
-        except Exception:
-            pass
         sys.stderr.write(line.ljust(80) + "\r")
         sys.stderr.flush()
 
@@ -244,13 +243,12 @@ def main() -> int:
             print(f"  {Color.red('✗')} {url}  {Color.yellow(msg)}", file=sys.stderr)
 
     print()
-    try:
+    # 二次健康检查仅用于展示统计，失败不影响入库结果汇总
+    with contextlib.suppress(APIError):
         final_health = client.get("/v1/health", timeout=10)
         print(
             f">> 库中现有 skill：{Color.bold(str(final_health.get('skills_count', 0)))}"
         )
-    except APIError:
-        pass
 
     print(
         f"   成功 {Color.green(str(ok_count))} / 失败 {Color.red(str(fail_count))} "

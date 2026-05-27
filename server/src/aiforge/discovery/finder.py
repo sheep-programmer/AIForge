@@ -29,7 +29,6 @@ _ANON_INTERVAL_SECONDS = 6.5  # 10/min → 6s/req，多留 0.5s 抖动
 _GITHUB_API = "https://api.github.com"
 _SEARCH_CODE = "/search/code"
 _SEARCH_REPOS = "/search/repositories"
-_REPO_CONTENTS = "/repos/{repo}/contents/{path}"
 
 FoundVia = Literal["github-search", "trending", "user-suggest"]
 

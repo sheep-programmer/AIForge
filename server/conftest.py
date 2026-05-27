@@ -7,11 +7,15 @@
 
 from __future__ import annotations
 
+import contextlib
+import logging
 import sys
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
 
 import pytest
+
+_logger = logging.getLogger(__name__)
 
 
 # 让 `import tests._utils` 在子目录测试里可用
@@ -59,10 +63,11 @@ def _stub_embedder_globally() -> Generator[None, None, None]:
     # 任何模块若已 import 了 get_embedder（如 pipeline），也要覆盖局部引用
     try:
         from aiforge.recommender import pipeline as pipeline_mod
-
-        pipeline_mod.get_embedder = lambda settings=None: fake  # type: ignore[assignment]
     except ImportError:
-        pass
+        # pipeline 模块还未引入（早期单元测试套件）；跳过覆盖即可
+        _logger.debug("pipeline module not importable; skip get_embedder shim")
+    else:
+        pipeline_mod.get_embedder = lambda settings=None: fake  # type: ignore[assignment]
 
     try:
         yield
@@ -109,11 +114,10 @@ def _do_clean() -> None:
                 "DELETE FROM vss_skills",
                 "DELETE FROM skills",
             ):
-                try:
+                with contextlib.suppress(Exception):
+                    # 表可能尚未由迁移创建（如初次启动），缺表是预期的；忽略即可
                     session.execute(text(stmt))
-                except Exception:
-                    pass
             session.commit()
     except Exception:
-        # 数据库还没就绪时静默跳过
-        pass
+        # 数据库还没就绪时静默跳过；细节用 debug 留痕，避免淹没正常用例输出
+        _logger.debug("conftest cleanup skipped (db not ready)", exc_info=True)

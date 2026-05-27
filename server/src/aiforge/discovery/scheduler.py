@@ -63,8 +63,12 @@ class RemoteFinderScheduler:
         self._task.cancel()
         try:
             await self._task
-        except (asyncio.CancelledError, Exception):
+        except asyncio.CancelledError:
+            # 取消是正常关停路径，不需要刷日志
             pass
+        except Exception:
+            # 任务体里抛出的异常已经在 _tick_safe 里记过，这里再补一条 stop 期间的上下文
+            logger.debug("scheduler.stop_swallowed_task_exception", exc_info=True)
         finally:
             self._task = None
         logger.info("scheduler.stopped")

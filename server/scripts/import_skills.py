@@ -15,7 +15,6 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from typing import Any
 
 from _common import APIError, Color, add_connection_args, die, make_client
 
