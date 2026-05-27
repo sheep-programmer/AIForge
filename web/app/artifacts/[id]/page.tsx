@@ -19,14 +19,10 @@ type Params = { id: string };
 export default function ArtifactDetailPage({
   params,
 }: {
-  params: Promise<Params> | Params;
+  params: Promise<Params>;
 }) {
-  // Next 14 兼容：新版本是 Promise，旧版本是对象。两者都用 use() 解包对老对象也安全。
-  const resolved: Params =
-    typeof (params as Promise<Params>).then === 'function'
-      ? use(params as Promise<Params>)
-      : (params as Params);
-  const id = resolved.id;
+  // Next 15: params 是 Promise，在 client component 中用 use() 解包。
+  const { id } = use(params);
 
   const { data, error, isLoading } = useSWR<ArtifactDetail>(
     `/v1/artifacts/${id}`,
