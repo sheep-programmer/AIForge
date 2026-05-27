@@ -91,7 +91,7 @@ jobs:
 
       - name: Upload coverage
         if: matrix.python-version == '3.12'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-xml
           path: server/coverage.xml
@@ -128,7 +128,7 @@ jobs:
 
       - name: Upload .next build manifest (debug aid)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: next-build-trace
           path: web/.next/trace
