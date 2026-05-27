@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import sys
@@ -66,6 +65,17 @@ class APIError(Exception):
     """业务/HTTP 错误，已经包含可读的中文提示。"""
 
 
+def _extract_detail(err_body: str) -> str:
+    """从错误响应体里抽 ``detail`` 字段；不是 JSON 就返回原文。"""
+    try:
+        parsed = json.loads(err_body)
+    except Exception:
+        return err_body
+    if isinstance(parsed, dict):
+        return str(parsed.get("detail", err_body))
+    return err_body
+
+
 class HTTPClient:
     """阻塞 HTTP 客户端，基于 stdlib urllib。"""
 
@@ -110,11 +120,8 @@ class HTTPClient:
                 return json.loads(raw.decode("utf-8"))
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8", errors="replace") if e.fp else ""
-            detail = err_body
             # err_body 可能不是 JSON（502 HTML 页等）；解析失败就直接用原文
-            with contextlib.suppress(Exception):
-                parsed = json.loads(err_body)
-                detail = parsed.get("detail", err_body)
+            detail = _extract_detail(err_body)
             raise APIError(
                 f"服务端返回 HTTP {e.code} ({method} {path})：{detail}"
             ) from None
