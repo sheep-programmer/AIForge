@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img" aria-label="AIForge — Unified registry & router for agent skills, MCP servers, and Claude Code plugins.">
+  <defs>
+    <!-- 暖色 parchment 渐变底，与 web UI 同色系 -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FCFBF8"/>
+      <stop offset="100%" stop-color="#F2F0EA"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="0" y1="0" x2="1280" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0E5C4A"/>
+      <stop offset="50%" stop-color="#1F7E64"/>
+      <stop offset="100%" stop-color="#3FC79A"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0E1116"/>
+      <stop offset="100%" stop-color="#252932"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0 H0 V32" fill="none" stroke="rgba(14,17,22,0.05)" stroke-width="1"/>
+    </pattern>
+    <pattern id="dot" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="0.9" fill="rgba(14,17,22,0.10)"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <rect width="1280" height="360" fill="url(#grid)"/>
+  <rect x="780" y="0" width="500" height="360" fill="url(#dot)"/>
+
+  <!-- 顶部和底部 hairline -->
+  <line x1="0" y1="1" x2="1280" y2="1" stroke="#E6E4DC" stroke-width="1"/>
+  <line x1="0" y1="359" x2="1280" y2="359" stroke="#E6E4DC" stroke-width="1"/>
+
+  <!-- 左侧 label -->
+  <text x="64" y="68" font-family="JetBrains Mono, ui-monospace, monospace" font-size="11" letter-spacing="2.6" fill="#7E828B">
+    CONTROL PLANE / v0.2
+  </text>
+
+  <!-- 主标题 -->
+  <text x="64" y="170" font-family="Fraunces, Georgia, serif" font-size="108" font-weight="350" letter-spacing="-2" fill="url(#ink)">
+    AIForge
+  </text>
+
+  <!-- live indicator -->
+  <circle cx="378" cy="138" r="6" fill="#1F7E64">
+    <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="378" cy="138" r="13" fill="none" stroke="#3FC79A" stroke-opacity="0.45">
+    <animate attributeName="r" values="9;18;9" dur="1.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0;0.6" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 副标题 -->
+  <text x="66" y="222" font-family="Inter, system-ui, sans-serif" font-size="20" fill="#3D424C" font-weight="400">
+    Unified registry &amp; router for agent skills, MCP servers, and Claude Code plugins.
+  </text>
+
+  <!-- bullet 行 -->
+  <g transform="translate(66 268)" font-family="JetBrains Mono, ui-monospace, monospace" font-size="11.5" fill="#5F6470" letter-spacing="0.8">
+    <g>
+      <circle cx="4" cy="0" r="2.4" fill="#0E5C4A"/>
+      <text x="14" y="4">skill · SKILL.md from any repo</text>
+    </g>
+    <g transform="translate(280 0)">
+      <rect x="2" y="-2" width="6" height="6" fill="#1F3F6F" transform="rotate(45 5 1)"/>
+      <text x="18" y="4">mcp · stdio · http · sse</text>
+    </g>
+    <g transform="translate(490 0)">
+      <rect x="0" y="-3" width="12" height="6" rx="3" fill="none" stroke="#A26F1E" stroke-width="1.4"/>
+      <text x="20" y="4">plugin · .claude-plugin/</text>
+    </g>
+    <g transform="translate(710 0)">
+      <path d="M0 0 L10 -5 L10 5 Z" fill="#0E5C4A"/>
+      <text x="18" y="4">tag · auto / manual · 20 builtin</text>
+    </g>
+  </g>
+
+  <!-- 右侧 mark：三个几何符号在大边框内 -->
+  <g transform="translate(960 60)">
+    <rect x="0" y="0" width="252" height="240" rx="16" fill="#FFFFFF" stroke="url(#stroke)" stroke-width="1.5"/>
+
+    <!-- 工程感刻度 -->
+    <g stroke="#0E1116" stroke-opacity="0.15">
+      <line x1="16" y1="38" x2="40" y2="38" stroke-width="1"/>
+      <line x1="16" y1="48" x2="32" y2="48"/>
+      <line x1="16" y1="58" x2="32" y2="58"/>
+      <line x1="16" y1="68" x2="32" y2="68"/>
+      <line x1="16" y1="78" x2="40" y2="78" stroke-width="1"/>
+    </g>
+    <text x="50" y="26" font-family="JetBrains Mono, monospace" font-size="9" fill="#7E828B" letter-spacing="2">REGISTRY · IDX</text>
+
+    <!-- 三符号 -->
+    <g transform="translate(126 130)" filter="url(#glow)">
+      <!-- skill: circle -->
+      <circle cx="-58" cy="0" r="22" fill="#0E5C4A"/>
+      <circle cx="-58" cy="0" r="6" fill="#FCFBF8"/>
+      <text x="-58" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#5F6470" letter-spacing="1">SKILL</text>
+
+      <!-- mcp: diamond -->
+      <rect x="-15" y="-15" width="30" height="30" rx="3" fill="#1F3F6F" transform="rotate(45)"/>
+      <rect x="-4.5" y="-4.5" width="9" height="9" fill="#FCFBF8" transform="rotate(45)"/>
+      <text x="0" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#5F6470" letter-spacing="1">MCP</text>
+
+      <!-- plugin: capsule -->
+      <rect x="36" y="-12" width="44" height="24" rx="12" fill="none" stroke="#A26F1E" stroke-width="3"/>
+      <rect x="46" y="-4" width="24" height="8" rx="4" fill="#A26F1E"/>
+      <text x="58" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#5F6470" letter-spacing="1">PLUGIN</text>
+    </g>
+
+    <!-- 底部 footer 行 -->
+    <line x1="14" y1="200" x2="238" y2="200" stroke="#E6E4DC"/>
+    <text x="14" y="220" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#5F6470" letter-spacing="1">
+      <tspan fill="#1F7E64">●</tspan> live · qwen-1.5b · embed-384
+    </text>
+  </g>
+
+  <!-- 右下：极细 build/version 标记 -->
+  <text x="1216" y="340" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="#7E828B" letter-spacing="1.5">
+    apache-2.0 · python 3.11+ · node 20+
+  </text>
+</svg>

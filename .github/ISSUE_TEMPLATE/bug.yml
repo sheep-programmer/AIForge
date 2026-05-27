@@ -51,8 +51,16 @@ body:
         - server / recommender
         - server / ingestion
         - server / discovery
+        - server / gateway (aiforge-mcp)
+        - server / tagger (autotag)
+        - server / api (tags, artifacts, autotag)
         - plugin / hook
+        - plugin / install (settings.json / ~/.claude/plugins)
         - plugin / fallback
+        - web / dashboard
+        - web / artifacts
+        - web / playground
+        - web / other
         - docker / deployment
         - docs
         - 其他 / other

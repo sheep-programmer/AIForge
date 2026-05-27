@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 文档 / Documentation
+    url: https://github.com/sheep-programmer/AIForge/tree/main/docs
+    about: 看文档（中英双语）— 架构、入库、推荐管线、Web 面板、插件用法
+  - name: 安全报告 / Security report
+    url: https://github.com/sheep-programmer/AIForge/security/advisories/new
+    about: 请走私下渠道，不要在公开 issue 里提安全漏洞
+  - name: 提问 / Ask a question
+    url: https://github.com/sheep-programmer/AIForge/discussions
+    about: 用法问题 / 非 bug 讨论先看这里

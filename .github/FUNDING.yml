@@ -1,0 +1,9 @@
+# 项目维护可选的资助渠道。当前都未启用 —— 留作 v0.3 评估。
+# 启用任一项需要先在对应平台开通账号；详见
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: [sheep-programmer]
+# open_collective: aiforge
+# ko_fi: aiforge
+# liberapay: aiforge
+custom: ["https://github.com/sponsors/sheep-programmer"]

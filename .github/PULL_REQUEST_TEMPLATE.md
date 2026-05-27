@@ -1,47 +1,63 @@
 <!--
-感谢提 PR！请填写下面所有 sections，别留 TODO。
-不超过 ~10 行代码的小改动可以省略「测试」段落。
+感谢提 PR / Thanks for the PR!
+- 中文为主、英文 OK / Chinese preferred, English also fine
+- 别留 TODO / Don't leave TODOs in this template
+- 不超过 ~10 行代码的小改动可省略「测试」段 / Tiny changes may skip the "Test" section
 -->
 
-## 这个 PR 做了什么
+## 这个 PR 做了什么 / Summary
 
-<!-- 一两句话说清楚改动 -->
+<!-- 一两句话说清楚改动 / One or two sentences -->
 
-## 为什么需要这个改动
+## 为什么需要这个改动 / Motivation
 
-<!-- 关联的 issue、动机、场景。能 fix #123 就 `fix #123` -->
+<!-- 关联的 issue、动机、场景。能 fix #123 就 `Fixes #123` -->
 
 Fixes #
 
-## 改动范围
+## 改动范围 / Scope
 
-- [ ] server / API
-- [ ] server / recommender（热路径，需贴性能数据）
+- [ ] server / api
+- [ ] server / recommender（热路径，需贴性能数据 / hot path — attach perf numbers）
 - [ ] server / ingestion
 - [ ] server / discovery
+- [ ] server / gateway (aiforge-mcp)
+- [ ] server / tagger (autotag)
 - [ ] plugin / hook
+- [ ] plugin / install / commands
 - [ ] plugin / fallback
-- [ ] docs
-- [ ] CI / 打包
-- [ ] 其他：
+- [ ] web / dashboard / artifacts / playground / 其他
+- [ ] docs (中文优先，英文 .en.md 同步 / zh first, .en.md mirrored)
+- [ ] CI / build / Docker
+- [ ] 其他 / other:
 
-## 如何测试
+## 如何测试 / How to test
 
 <!--
-- 自动化测试：跑了 `uv run pytest tests/test_xxx.py`
-- 手工验证：写出复现 + 验证步骤，让 reviewer 能照着做
-- 性能：贴 before/after p50/p95（如果改了 recommender）
+- 自动化：贴跑过的命令，如 uv run pytest tests/test_xxx.py / npx tsc --noEmit / npx next build
+- 手工：写出复现 + 验证步骤，让 reviewer 能照着做
+- 性能：改了 recommender / gateway / autotag 必须贴 before/after p50/p95
 -->
 
-## 风险与回滚
+## 截图 / Screenshots
 
-<!-- 出问题怎么回滚？是否需要数据迁移？是否破坏向后兼容？ -->
+<!-- 改 Web UI 必贴。其他可选。Before / After 对比更佳。 -->
+
+## 风险与回滚 / Risk & rollback
+
+<!--
+- 出问题怎么回滚？需要数据迁移吗？破坏向后兼容吗？
+- Alembic migration 升级路径？降级路径？
+- 影响外部契约（API / mcp_config 形状 / 插件命令）吗？
+-->
 
 ## Checklist
 
-- [ ] 跑了 `ruff check` + `ruff format` + `mypy --strict`
-- [ ] 新代码有测试（除非纯 docs / 配置）
-- [ ] 修改了 `docs/architecture.md` 涉及契约的部分（如果有）
-- [ ] 中文文档优先，英文 `.en.md` 已同步（如果改了 docs）
-- [ ] 没有 commit 进 `.env` 或 API key
-- [ ] commit 信息符合约定式（feat/fix/docs/refactor/perf/chore）
+- [ ] `ruff check && ruff format --check && mypy --strict` 通过 / passes
+- [ ] `cd web && npx tsc --noEmit && npx next build` 通过 / passes（如果改了 web）
+- [ ] 新代码有测试（除非纯 docs / 配置）/ New code has tests (unless docs only)
+- [ ] 改了 `docs/architecture.md` 中涉及的契约部分（如果有）
+- [ ] 中文文档优先；英文 `.en.md` 已同步 / Chinese first, English mirrored
+- [ ] 改了 schema 已写 alembic migration 并本地跑通 / Schema change has migration & ran locally
+- [ ] 没有 commit `.env` / API key / 密钥 / `~/.claude/settings.json` / dot-env / secret
+- [ ] Commit 信息符合 Conventional Commits（feat/fix/docs/refactor/perf/chore）

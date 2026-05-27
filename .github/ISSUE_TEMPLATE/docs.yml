@@ -1,0 +1,44 @@
+name: 文档问题 / Docs issue
+description: 报告文档错误或建议改进 / Report a doc issue or suggest an improvement
+title: "[docs] "
+labels: ["docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        中英文档都欢迎报修。 / Both Chinese and English docs welcome.
+
+  - type: input
+    id: file
+    attributes:
+      label: 涉及文件 / File
+      description: 例如 docs/architecture.md / e.g. docs/architecture.md
+      placeholder: docs/<path>.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: 问题 / Issue
+      description: 哪里不对 / 缺什么 / 哪里读不懂 / What's wrong / missing / unclear
+      placeholder: |
+        - 第 N 段：……
+        - 应该改成 ……
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型 / Kind
+      options:
+        - 笔误 / Typo
+        - 错误信息 / Factual error
+        - 缺失内容 / Missing content
+        - 表达不清 / Unclear wording
+        - 翻译同步 / Translation drift
+        - 示例代码失效 / Broken example
+        - 其他 / Other
+    validations:
+      required: true

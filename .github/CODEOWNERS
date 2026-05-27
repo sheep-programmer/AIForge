@@ -1,27 +1,32 @@
-# Skillforge 代码所有者
+# AIForge 代码所有者
 #
 # 顺序由后到前匹配：最后一条匹配的规则生效。
-# 关于格式：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# 格式参考：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # 默认：项目维护者
-*                                       @skillforge-maintainers
+*                                     @sheep-programmer
 
 # 服务端核心
-/server/                                @skillforge-maintainers
-/server/src/skillforge/recommender/     @skillforge-maintainers
-/server/src/skillforge/ingestion/       @skillforge-maintainers
-/server/src/skillforge/discovery/       @skillforge-maintainers
+/server/                              @sheep-programmer
+/server/src/aiforge/recommender/      @sheep-programmer
+/server/src/aiforge/ingestion/        @sheep-programmer
+/server/src/aiforge/discovery/        @sheep-programmer
+/server/src/aiforge/gateway/          @sheep-programmer
 
 # 插件
-/plugin/                                @skillforge-maintainers
+/plugin/                              @sheep-programmer
+
+# Web 管理面板
+/web/                                 @sheep-programmer
 
 # CI / 打包 / 部署
-/.github/                               @skillforge-maintainers
-/server/docker/                         @skillforge-maintainers
-/examples/                              @skillforge-maintainers
+/.github/                             @sheep-programmer
+/server/docker/                       @sheep-programmer
+/examples/                            @sheep-programmer
 
 # 文档（架构契约必须 review）
-/docs/architecture.md                   @skillforge-maintainers
-/docs/architecture.en.md                @skillforge-maintainers
-/README.md                              @skillforge-maintainers
-/README.en.md                           @skillforge-maintainers
+/docs/architecture.md                 @sheep-programmer
+/docs/architecture.en.md              @sheep-programmer
+/docs/extension-spec.md               @sheep-programmer
+/README.md                            @sheep-programmer
+/README.en.md                         @sheep-programmer

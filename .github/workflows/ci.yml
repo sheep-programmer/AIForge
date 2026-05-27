@@ -98,7 +98,44 @@ jobs:
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
-  # 3. Docker 构建（验证 Dockerfile 不破，不 push）
+  # 3. Web 管理面板：typecheck + production build
+  # ---------------------------------------------------------------------------
+  web:
+    name: web (next typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npx next build
+
+      - name: Upload .next build manifest (debug aid)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-trace
+          path: web/.next/trace
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 4. Docker 构建（验证 Dockerfile 不破，不 push）
   # ---------------------------------------------------------------------------
   docker-build:
     name: docker build
