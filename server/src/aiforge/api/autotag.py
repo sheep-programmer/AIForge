@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import not_, select
 from sqlalchemy.orm import Session
 
-from aiforge.api.deps import get_db, require_api_key
+from aiforge.api.deps import require_api_key
 from aiforge.config import get_settings
 from aiforge.core.db import get_session_maker
 from aiforge.core.models import ArtifactTag, Skill
@@ -127,7 +127,7 @@ def _run_job(
                 total=state.total,
                 tagged=state.tagged,
             )
-    except Exception as exc:  # noqa: BLE001 — 后台任务必须吞所有异常并存到 state
+    except Exception as exc:
         state.status = "error"
         state.error = str(exc)[:500]
         _save_state(state)

@@ -128,6 +128,7 @@ def _parse_tags(raw: str) -> list[str]:
 
 # ---------- 后端调用（复制自 reranker；保持独立避免耦合） ----------
 
+
 def _call_ollama(system: str, user: str, settings: Settings) -> str:
     """同步调用 Ollama /api/chat，返回模型完整文本输出。"""
     payload: dict[str, Any] = {
@@ -174,6 +175,7 @@ def _call_haiku(system: str, user: str, settings: Settings) -> str:
 
 
 # ---------- 主入口 ----------
+
 
 def auto_tag_artifact(
     artifact: Skill,

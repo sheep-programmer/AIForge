@@ -93,7 +93,7 @@ class Skill(Base):
     last_recommended_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     recommend_count: Mapped[int] = mapped_column(Integer, default=0)
 
-    tags: Mapped[list["ArtifactTag"]] = relationship(
+    tags: Mapped[list[ArtifactTag]] = relationship(
         "ArtifactTag",
         back_populates="skill",
         cascade="all, delete-orphan",
@@ -121,7 +121,7 @@ class Tag(Base):
     is_builtin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
-    artifacts: Mapped[list["ArtifactTag"]] = relationship(
+    artifacts: Mapped[list[ArtifactTag]] = relationship(
         "ArtifactTag", back_populates="tag", cascade="all, delete-orphan"
     )
 
@@ -148,9 +148,7 @@ class ArtifactTag(Base):
     skill: Mapped[Skill] = relationship(Skill, back_populates="tags")
     tag: Mapped[Tag] = relationship(Tag, back_populates="artifacts")
 
-    __table_args__ = (
-        Index("ix_skill_tags_tag_name", "tag_name"),
-    )
+    __table_args__ = (Index("ix_skill_tags_tag_name", "tag_name"),)
 
 
 class IngestJob(Base):
@@ -189,7 +187,9 @@ class PendingDiscovery(Base):
     found_via: Mapped[str] = mapped_column(String(64))  # github-search/trending/user-suggest
     found_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    decision: Mapped[str] = mapped_column(String(32), default="pending")  # pending/approved/rejected
+    decision: Mapped[str] = mapped_column(
+        String(32), default="pending"
+    )  # pending/approved/rejected
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 

@@ -284,8 +284,11 @@ async def test_server_routes_tools_call_to_correct_proxy() -> None:
     )
 
     r1 = await gw._dispatch(
-        {"id": 10, "method": "tools/call",
-         "params": {"name": "fs__read", "arguments": {"path": "/etc/hosts"}}}
+        {
+            "id": 10,
+            "method": "tools/call",
+            "params": {"name": "fs__read", "arguments": {"path": "/etc/hosts"}},
+        }
     )
     assert r1 is not None
     assert r1["result"]["content"][0]["text"] == "fs:read"
@@ -293,8 +296,7 @@ async def test_server_routes_tools_call_to_correct_proxy() -> None:
     assert p_gh.calls == []
 
     r2 = await gw._dispatch(
-        {"id": 11, "method": "tools/call",
-         "params": {"name": "github__read", "arguments": {}}}
+        {"id": 11, "method": "tools/call", "params": {"name": "github__read", "arguments": {}}}
     )
     assert r2 is not None
     assert r2["result"]["content"][0]["text"] == "github:read"

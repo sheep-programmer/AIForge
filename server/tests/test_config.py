@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aiforge.config import Settings, get_settings
+from aiforge.config import get_settings
 
 
 def test_defaults_match_contract(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -24,9 +24,7 @@ def test_defaults_match_contract(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     assert s.max_tokens_default == 4000
 
 
-def test_env_var_override_takes_effect(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_env_var_override_takes_effect(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """AIFORGE_PORT 应覆盖默认。"""
     monkeypatch.setenv("AIFORGE_PORT", "9000")
     monkeypatch.setenv("AIFORGE_DB_PATH", str(tmp_path / "x.db"))
@@ -35,9 +33,7 @@ def test_env_var_override_takes_effect(
     assert s.port == 9000
 
 
-def test_db_path_parent_is_created(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_db_path_parent_is_created(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """配置的 db_path 父目录应被自动创建。"""
     deep = tmp_path / "nested" / "subdir" / "aiforge.db"
     assert not deep.parent.exists()
@@ -48,9 +44,7 @@ def test_db_path_parent_is_created(
     assert s.db_path.parent.is_dir()
 
 
-def test_requires_auth_property(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_requires_auth_property(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """配置 api_key 后 requires_auth=True。"""
     monkeypatch.setenv("AIFORGE_DB_PATH", str(tmp_path / "y.db"))
     monkeypatch.delenv("AIFORGE_API_KEY", raising=False)
@@ -62,9 +56,7 @@ def test_requires_auth_property(
     assert get_settings().requires_auth is True
 
 
-def test_invalid_reranker_value_raises(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_invalid_reranker_value_raises(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """reranker 是 Literal 枚举，传非法值应 raise。"""
     monkeypatch.setenv("AIFORGE_DB_PATH", str(tmp_path / "z.db"))
     monkeypatch.setenv("AIFORGE_RERANKER", "not-a-backend")
@@ -76,9 +68,7 @@ def test_invalid_reranker_value_raises(
     get_settings.cache_clear()
 
 
-def test_get_settings_is_cached(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_get_settings_is_cached(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """连续两次 get_settings 必须返回同一对象。"""
     monkeypatch.setenv("AIFORGE_DB_PATH", str(tmp_path / "cache.db"))
     get_settings.cache_clear()

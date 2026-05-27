@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import structlog
@@ -82,7 +82,7 @@ def _to_recommendation(item: RerankItem) -> Recommendation:
 
 
 def _log_recommendation(
-    session: "Session",
+    session: Session,
     *,
     request_id: str,
     prompt: str,
@@ -107,7 +107,7 @@ def _log_recommendation(
     session.add(log)
 
     if chosen:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         session.execute(
             update(Skill)
             .where(Skill.id.in_([it.skill.id for it in chosen]))
@@ -122,7 +122,7 @@ def _log_recommendation(
 def recommend(
     prompt: str,
     *,
-    db_session: "Session",
+    db_session: Session,
     top_k: int | None = None,
     max_tokens: int | None = None,
     exclude_ids: list[str] | None = None,

@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from sqlalchemy import select
@@ -37,7 +37,7 @@ def _distance_to_similarity(distance: float) -> float:
 
 def retrieve(
     session: Session,
-    query_vec: "np.ndarray",
+    query_vec: np.ndarray,
     top_k: int,
     exclude_ids: set[str] | None = None,
 ) -> list[tuple[Skill, float]]:
@@ -76,13 +76,17 @@ def retrieve(
     if not skill_ids:
         return []
 
-    skills = session.execute(
-        select(Skill).where(
-            Skill.id.in_(skill_ids),
-            Skill.is_active.is_(True),
-            Skill.is_approved.is_(True),
+    skills = (
+        session.execute(
+            select(Skill).where(
+                Skill.id.in_(skill_ids),
+                Skill.is_active.is_(True),
+                Skill.is_approved.is_(True),
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     id_to_skill = {s.id: s for s in skills}
 
@@ -109,8 +113,11 @@ def retrieve(
     return results
 
 
-def _rowid_lookup_stmt(rowids: list[int]) -> "object":
-    """根据 rowid 列表查 (rowid, id) —— 必须用 raw SQL 因为 ORM 不暴露 rowid。"""
+def _rowid_lookup_stmt(rowids: list[int]) -> Any:
+    """根据 rowid 列表查 (rowid, id) —— 必须用 raw SQL 因为 ORM 不暴露 rowid。
+
+    返回类型用 Any 而非 TextClause 以兼容旧 SQLAlchemy 重载签名。
+    """
     from sqlalchemy import text
 
     if not rowids:

@@ -7,8 +7,6 @@ sqlite-vss 用 SQLite 扩展实现向量索引。我们把向量存到 `vss_skil
 from __future__ import annotations
 
 import sqlite3
-import struct
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -100,16 +98,12 @@ def upsert_embedding(session: Session, skill_rowid: int, vec: np.ndarray) -> Non
         {"rowid": skill_rowid},
     )
     session.execute(
-        sqlite_vss_text(
-            "INSERT INTO vss_skills(rowid, embedding) VALUES (:rowid, :emb)"
-        ),
+        sqlite_vss_text("INSERT INTO vss_skills(rowid, embedding) VALUES (:rowid, :emb)"),
         {"rowid": skill_rowid, "emb": blob},
     )
 
 
-def vss_search(
-    session: Session, query_vec: np.ndarray, top_k: int
-) -> list[tuple[int, float]]:
+def vss_search(session: Session, query_vec: np.ndarray, top_k: int) -> list[tuple[int, float]]:
     """向量检索。返回 [(rowid, distance), ...]，距离越小越相似。
 
     必须用 ``vss_search_params(emb, k)`` 包装，否则底层 FAISS 抛
@@ -121,9 +115,7 @@ def vss_search(
         return []
 
     # 先 count；virtual table 的 COUNT(*) 是 O(1) 元数据
-    count_row = session.execute(
-        sqlite_vss_text("SELECT count(*) FROM vss_skills")
-    ).first()
+    count_row = session.execute(sqlite_vss_text("SELECT count(*) FROM vss_skills")).first()
     if not count_row or int(count_row[0]) == 0:
         return []
 
@@ -145,4 +137,5 @@ def vss_search(
 # 局部导入，避免 SQLAlchemy 2.x 弃用警告
 def sqlite_vss_text(s: str) -> Any:
     from sqlalchemy import text
+
     return text(s)

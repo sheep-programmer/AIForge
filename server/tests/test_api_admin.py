@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,15 +27,13 @@ def _seed_discovery(
             sample_skill_names="[]",
             found_via="test",
             decision=decision,
-            found_at=datetime.now(timezone.utc),
+            found_at=datetime.now(UTC),
         )
     )
     session.commit()
 
 
-def test_admin_list_discoveries_returns_list(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_admin_list_discoveries_returns_list(api_client: TestClient, db_session: Session) -> None:
     """GET /admin/discoveries 返回 JSON 列表。"""
     _seed_discovery(db_session, "disc_a")
     _seed_discovery(db_session, "disc_b")
@@ -50,9 +47,7 @@ def test_admin_list_discoveries_returns_list(
     assert "disc_b" in ids
 
 
-def test_admin_approve_creates_ingest_job(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_admin_approve_creates_ingest_job(api_client: TestClient, db_session: Session) -> None:
     """POST /admin/discoveries/{id}/approve 应返回 ingest_job_id 并入库 IngestJob。"""
     _seed_discovery(db_session, "disc_approve")
 
@@ -87,9 +82,7 @@ def test_admin_approve_missing_returns_404(api_client: TestClient) -> None:
     assert resp.status_code == 404
 
 
-def test_admin_reject_marks_rejected(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_admin_reject_marks_rejected(api_client: TestClient, db_session: Session) -> None:
     """reject 成功返回 decision=rejected。"""
     _seed_discovery(db_session, "disc_rej_ok")
 

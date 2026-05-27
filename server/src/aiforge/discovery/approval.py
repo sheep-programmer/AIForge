@@ -8,8 +8,9 @@ approve 必须在同事务内同时：
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -43,15 +44,13 @@ def approve(
     """
     row = _load_pending(session, discovery_id)
     if row.decision != "pending":
-        raise DiscoveryStateError(
-            f"discovery {discovery_id} already {row.decision}"
-        )
+        raise DiscoveryStateError(f"discovery {discovery_id} already {row.decision}")
 
     factory = ingest_factory or _default_ingest_factory
     try:
         job_id = factory(row.source_url, session)
         row.decision = "approved"
-        row.reviewed_at = datetime.now(timezone.utc)
+        row.reviewed_at = datetime.now(UTC)
         if notes is not None:
             row.notes = notes
         session.commit()
@@ -81,11 +80,9 @@ def reject(
     """拒绝一个发现。"""
     row = _load_pending(session, discovery_id)
     if row.decision != "pending":
-        raise DiscoveryStateError(
-            f"discovery {discovery_id} already {row.decision}"
-        )
+        raise DiscoveryStateError(f"discovery {discovery_id} already {row.decision}")
     row.decision = "rejected"
-    row.reviewed_at = datetime.now(timezone.utc)
+    row.reviewed_at = datetime.now(UTC)
     if notes is not None:
         row.notes = notes
     session.commit()
@@ -113,6 +110,7 @@ def list_pending(
 
 
 # ---------- 内部 ----------
+
 
 def _load_pending(session: Session, discovery_id: str) -> PendingDiscovery:
     row = session.get(PendingDiscovery, discovery_id)

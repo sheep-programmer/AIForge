@@ -97,9 +97,7 @@ class GatewayServer:
 
     async def start_proxies(self) -> None:
         """并发启动所有下游 proxy，失败的逐个跳过。"""
-        proxies = [
-            MCPProxy(a.artifact_id, a.name, a.config) for a in self._active
-        ]
+        proxies = [MCPProxy(a.artifact_id, a.name, a.config) for a in self._active]
         results = await asyncio.gather(
             *(self._start_one(p) for p in proxies), return_exceptions=False
         )
@@ -119,19 +117,19 @@ class GatewayServer:
         try:
             await proxy.start()
             return True
-        except Exception as exc:  # noqa: BLE001 — 隔离任意下游异常
+        except Exception as exc:
             logger.warning(
                 "gateway.proxy_start_failed",
-                artifact_id=proxy.artifact_id, name=proxy.name, error=str(exc),
+                artifact_id=proxy.artifact_id,
+                name=proxy.name,
+                error=str(exc),
             )
             with contextlib.suppress(Exception):
                 await proxy.aclose()
             return False
 
     async def shutdown(self) -> None:
-        await asyncio.gather(
-            *(p.aclose() for p in self._proxies), return_exceptions=True
-        )
+        await asyncio.gather(*(p.aclose() for p in self._proxies), return_exceptions=True)
 
     def _rebuild_tool_index(self) -> None:
         idx: dict[str, _RoutedTool] = {}
@@ -140,8 +138,10 @@ class GatewayServer:
                 exposed = _expose_name(proxy.name, tool.name)
                 if exposed in idx:
                     logger.warning(
-                        "gateway.tool_name_collision", exposed=exposed,
-                        existing=idx[exposed].proxy.name, new=proxy.name,
+                        "gateway.tool_name_collision",
+                        exposed=exposed,
+                        existing=idx[exposed].proxy.name,
+                        new=proxy.name,
                     )
                     continue
                 idx[exposed] = _RoutedTool(
@@ -243,9 +243,7 @@ class GatewayServer:
             )
         return out
 
-    async def _tools_call(
-        self, rid: Any, params: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _tools_call(self, rid: Any, params: dict[str, Any]) -> dict[str, Any]:
         name = params.get("name")
         arguments = params.get("arguments") or {}
         if not isinstance(name, str):
@@ -259,15 +257,15 @@ class GatewayServer:
             result = await routed.proxy.call_tool(routed.original_name, arguments)
         except ProxyError as exc:
             logger.warning(
-                "gateway.tool_call_failed", tool=name, error=str(exc),
+                "gateway.tool_call_failed",
+                tool=name,
+                error=str(exc),
             )
             return self._ok(
                 rid,
                 {
                     "isError": True,
-                    "content": [
-                        {"type": "text", "text": f"downstream error: {exc}"}
-                    ],
+                    "content": [{"type": "text", "text": f"downstream error: {exc}"}],
                 },
             )
         return self._ok(rid, result)

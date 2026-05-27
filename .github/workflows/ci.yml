@@ -77,6 +77,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --python ${{ matrix.python-version }}
 
+      # sqlite-vss 依赖 libblas / liblapack 的运行时 .so，ubuntu-latest 不预装
+      - name: Install BLAS / LAPACK system libs
+        run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libblas3 liblapack3
+
       - name: Cache HuggingFace models
         uses: actions/cache@v4
         with:

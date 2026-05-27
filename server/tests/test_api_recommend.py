@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -25,9 +23,13 @@ def _patch_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def _fake_retrieve(session, qvec, top_k, exclude_ids=None):  # type: ignore[no-untyped-def]
         exclude = exclude_ids or set()
-        rows = session.execute(
-            select(Skill).where(Skill.is_active.is_(True), Skill.is_approved.is_(True))
-        ).scalars().all()
+        rows = (
+            session.execute(
+                select(Skill).where(Skill.is_active.is_(True), Skill.is_approved.is_(True))
+            )
+            .scalars()
+            .all()
+        )
         results: list = []
         for s in rows:
             if s.id in exclude:

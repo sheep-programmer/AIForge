@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -25,9 +22,7 @@ def _seed_some(session: Session) -> list[str]:
     return ids
 
 
-def test_list_skills_paginated(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_list_skills_paginated(api_client: TestClient, db_session: Session) -> None:
     """列表带分页字段。"""
     _seed_some(db_session)
 
@@ -40,9 +35,7 @@ def test_list_skills_paginated(
     assert len(body["items"]) == 2
 
 
-def test_list_skills_query_filter(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_list_skills_query_filter(api_client: TestClient, db_session: Session) -> None:
     """?q=security 应只返回名字或描述含 security 的条目。"""
     _seed_some(db_session)
 
@@ -56,9 +49,7 @@ def test_list_skills_query_filter(
     assert any(item["id"] == "id_sec" for item in items)
 
 
-def test_patch_skill_toggles_is_active(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_patch_skill_toggles_is_active(api_client: TestClient, db_session: Session) -> None:
     """PATCH is_active 应改写并返回 detail。"""
     _seed_some(db_session)
 
@@ -70,9 +61,7 @@ def test_patch_skill_toggles_is_active(
     assert resp2.json()["is_active"] is False
 
 
-def test_delete_skill_returns_204(
-    api_client: TestClient, db_session: Session
-) -> None:
+def test_delete_skill_returns_204(api_client: TestClient, db_session: Session) -> None:
     """DELETE 返回 204；之后查询 404。"""
     _seed_some(db_session)
 

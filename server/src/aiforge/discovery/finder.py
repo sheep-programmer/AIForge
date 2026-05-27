@@ -9,7 +9,7 @@ import asyncio
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import httpx
@@ -23,8 +23,8 @@ from aiforge.core.models import PendingDiscovery, Skill
 logger = structlog.get_logger(__name__)
 
 # GitHub Search 限速：未认证 10 req/min，认证 30 req/min。统一取 30，留余量。
-_AUTH_INTERVAL_SECONDS = 2.1   # 30/min → 2s/req，多留 0.1s 抖动
-_ANON_INTERVAL_SECONDS = 6.5   # 10/min → 6s/req，多留 0.5s 抖动
+_AUTH_INTERVAL_SECONDS = 2.1  # 30/min → 2s/req，多留 0.1s 抖动
+_ANON_INTERVAL_SECONDS = 6.5  # 10/min → 6s/req，多留 0.5s 抖动
 
 _GITHUB_API = "https://api.github.com"
 _SEARCH_CODE = "/search/code"
@@ -39,7 +39,7 @@ class DiscoveredRepo:
     """单个发现的仓库，准备写入 pending_discoveries。"""
 
     source_url: str
-    source_repo: str          # "owner/repo"
+    source_repo: str  # "owner/repo"
     source_stars: int
     skill_count: int
     sample_skill_names: list[str] = field(default_factory=list)
@@ -63,9 +63,7 @@ class RemoteFinder:
             follow_redirects=True,
         )
         self._interval = (
-            _AUTH_INTERVAL_SECONDS
-            if self._settings.github_token
-            else _ANON_INTERVAL_SECONDS
+            _AUTH_INTERVAL_SECONDS if self._settings.github_token else _ANON_INTERVAL_SECONDS
         )
 
     async def aclose(self) -> None:
@@ -123,9 +121,7 @@ class RemoteFinder:
 
     # ---------- GitHub 调用 ----------
 
-    async def _search_code(
-        self, limit: int, seen: set[str]
-    ) -> list[DiscoveredRepo]:
+    async def _search_code(self, limit: int, seen: set[str]) -> list[DiscoveredRepo]:
         """Code Search：filename:SKILL.md + language:Markdown。"""
         params = {
             "q": "filename:SKILL.md language:Markdown",
@@ -169,9 +165,7 @@ class RemoteFinder:
                 break
         return out
 
-    async def _search_trending(
-        self, limit: int, seen: set[str]
-    ) -> list[DiscoveredRepo]:
+    async def _search_trending(self, limit: int, seen: set[str]) -> list[DiscoveredRepo]:
         """Repo Search：topic:claude-code + topic:skills，按 star 倒序。"""
         params = {
             "q": "topic:claude-code topic:skills",
@@ -244,7 +238,7 @@ class RemoteFinder:
         resp = await self._client.get(url, params=params, headers=headers)
         if resp.status_code == 403 and "rate limit" in resp.text.lower():
             reset = int(resp.headers.get("X-RateLimit-Reset", "0"))
-            wait = max(0, reset - int(datetime.now(timezone.utc).timestamp())) + 1
+            wait = max(0, reset - int(datetime.now(UTC).timestamp())) + 1
             logger.warning("remote_finder.rate_limited", wait_seconds=wait)
             await asyncio.sleep(min(wait, 120))
             return None
@@ -256,10 +250,12 @@ class RemoteFinder:
                 body=resp.text[:200],
             )
             return None
-        return resp.json()
+        body: dict[str, Any] = resp.json()
+        return body
 
 
 # ---------- 内部工具 ----------
+
 
 def _existing_skill_urls(session: Session) -> set[str]:
     rows = session.execute(select(Skill.source_url)).all()

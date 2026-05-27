@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-import pytest
 from sqlalchemy.orm import Session
 
 from aiforge.core.db import (
@@ -15,7 +14,6 @@ from aiforge.core.db import (
     upsert_embedding,
     vss_search,
 )
-
 from tests._utils import deterministic_vec, make_skill, seed_skill
 
 

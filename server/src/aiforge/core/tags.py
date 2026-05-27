@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import structlog
 from sqlalchemy import select
@@ -112,9 +112,7 @@ def set_artifact_tags(
 
     # 写入新关联
     for name in names:
-        session.add(
-            ArtifactTag(skill_id=artifact.id, tag_name=name, source=source)
-        )
+        session.add(ArtifactTag(skill_id=artifact.id, tag_name=name, source=source))
     session.commit()
     session.refresh(artifact)
     return list_tags_for(artifact)

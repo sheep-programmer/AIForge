@@ -12,7 +12,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-
 # 在导入任何 aiforge 模块前先设置环境变量
 os.environ.setdefault("AIFORGE_DB_PATH", str(Path(tempfile.gettempdir()) / "sf_test.db"))
 os.environ.setdefault("AIFORGE_RERANKER", "none")

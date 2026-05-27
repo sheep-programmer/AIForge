@@ -62,6 +62,7 @@ class MCPProxy:
 
         self._proc: asyncio.subprocess.Process | None = None
         self._reader_task: asyncio.Task[None] | None = None
+        self._stderr_task: asyncio.Task[None] | None = None
         self._next_id: int = 0
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._tools: list[ProxyTool] = []
@@ -75,9 +76,7 @@ class MCPProxy:
         """spawn 子进程 + initialize + tools/list。失败抛 ProxyError。"""
         transport = self.config.get("transport", "stdio")
         if transport != "stdio":
-            raise ProxyError(
-                f"transport {transport!r} not supported in MVP (only stdio)"
-            )
+            raise ProxyError(f"transport {transport!r} not supported in MVP (only stdio)")
 
         command = self.config.get("command")
         if not isinstance(command, str) or not command:
@@ -94,8 +93,11 @@ class MCPProxy:
         env.update({str(k): str(v) for k, v in env_overlay.items()})
 
         logger.info(
-            "proxy.spawn", artifact_id=self.artifact_id, name=self.name,
-            command=command, args=args,
+            "proxy.spawn",
+            artifact_id=self.artifact_id,
+            name=self.name,
+            command=command,
+            args=args,
         )
         try:
             self._proc = await asyncio.create_subprocess_exec(
@@ -109,10 +111,11 @@ class MCPProxy:
         except (FileNotFoundError, PermissionError, OSError) as exc:
             raise ProxyError(f"spawn failed: {exc}") from exc
 
-        self._reader_task = asyncio.create_task(
-            self._read_loop(), name=f"proxy-reader-{self.name}"
+        self._reader_task = asyncio.create_task(self._read_loop(), name=f"proxy-reader-{self.name}")
+        # 持引用，避免事件循环 GC 掉 drain 任务（同时也满足 RUF006）
+        self._stderr_task = asyncio.create_task(
+            self._drain_stderr(), name=f"proxy-stderr-{self.name}"
         )
-        asyncio.create_task(self._drain_stderr(), name=f"proxy-stderr-{self.name}")
 
         await self._handshake()
         await self._refresh_tools()
@@ -145,9 +148,7 @@ class MCPProxy:
     def tools(self) -> list[ProxyTool]:
         return list(self._tools)
 
-    async def call_tool(
-        self, tool_name: str, arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """转发 tools/call 到下游。返回下游原始 result 对象。"""
         if not self._started:
             raise ProxyError("proxy not started")
@@ -173,8 +174,10 @@ class MCPProxy:
             result = await self._request("tools/list", {})
         except ProxyError as exc:
             logger.warning(
-                "proxy.tools_list_failed", artifact_id=self.artifact_id,
-                name=self.name, error=str(exc),
+                "proxy.tools_list_failed",
+                artifact_id=self.artifact_id,
+                name=self.name,
+                error=str(exc),
             )
             self._tools = []
             return
@@ -198,7 +201,9 @@ class MCPProxy:
             )
         self._tools = parsed
         logger.info(
-            "proxy.tools_loaded", name=self.name, count=len(parsed),
+            "proxy.tools_loaded",
+            name=self.name,
+            count=len(parsed),
             tools=[t.name for t in parsed],
         )
 
@@ -284,10 +289,11 @@ class MCPProxy:
                 if not line:
                     break
                 logger.debug(
-                    "proxy.stderr", name=self.name,
+                    "proxy.stderr",
+                    name=self.name,
                     line=line.decode("utf-8", errors="replace").rstrip(),
                 )
         except asyncio.CancelledError:
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug("proxy.stderr_drain_error", name=self.name, error=str(exc))

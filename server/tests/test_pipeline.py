@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from aiforge.core.models import Skill
 from aiforge.recommender.pipeline import recommend
-
 from tests._utils import deterministic_vec, make_skill, patch_embedder, seed_skill
 
 
@@ -27,14 +26,20 @@ def _patch_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(pipeline_mod, "dedup", lambda candidates, embedder_dim=384: candidates)
 
-    def _fake_retrieve(session: Session, qvec: Any, top_k: int, exclude_ids: set | None = None) -> list:
+    def _fake_retrieve(
+        session: Session, qvec: Any, top_k: int, exclude_ids: set | None = None
+    ) -> list:
         """直接扫表 + numpy cosine 相似度排序，避免触发 sqlite-vss。"""
         from sqlalchemy import select
 
         exclude = exclude_ids or set()
-        rows = session.execute(
-            select(Skill).where(Skill.is_active.is_(True), Skill.is_approved.is_(True))
-        ).scalars().all()
+        rows = (
+            session.execute(
+                select(Skill).where(Skill.is_active.is_(True), Skill.is_approved.is_(True))
+            )
+            .scalars()
+            .all()
+        )
         results: list = []
         for s in rows:
             if s.id in exclude:
@@ -85,9 +90,7 @@ def test_recommend_returns_top_k_sorted_desc(
     assert response.elapsed_ms >= 0
 
     # 校验 recommend_count 已 +1
-    updated_count = sum(
-        1 for sid in ids if db_session.get(Skill, sid).recommend_count > 0
-    )
+    updated_count = sum(1 for sid in ids if db_session.get(Skill, sid).recommend_count > 0)
     assert updated_count == 3
 
 

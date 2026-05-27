@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy.orm import Session
@@ -33,7 +33,7 @@ def _make_discovery(
         sample_skill_names="[]",
         found_via="test",
         decision=decision,
-        found_at=datetime.now(timezone.utc),
+        found_at=datetime.now(UTC),
     )
     session.add(row)
     session.commit()

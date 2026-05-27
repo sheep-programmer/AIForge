@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
 
-from aiforge.core.db import pack_embedding, upsert_embedding
+from aiforge.core.db import upsert_embedding
 from aiforge.core.models import Skill
 
 
@@ -52,7 +52,7 @@ def make_skill(
         source_stars=source_stars,
         is_active=is_active,
         is_approved=is_approved,
-        updated_at=updated_at or datetime.now(timezone.utc),
+        updated_at=updated_at or datetime.now(UTC),
         recommend_count=0,
     )
 
@@ -79,11 +79,14 @@ def seed_skill(
 
 def _text(s: str) -> Any:
     from sqlalchemy import text
+
     return text(s)
 
 
 def clean_tables(session: Any) -> None:
     """删干净 4 张业务表 + vss_skills，保证测试隔离。"""
+    import contextlib
+
     for stmt in (
         "DELETE FROM recommendation_logs",
         "DELETE FROM ingest_jobs",
@@ -91,10 +94,8 @@ def clean_tables(session: Any) -> None:
         "DELETE FROM vss_skills",
         "DELETE FROM skills",
     ):
-        try:
+        with contextlib.suppress(Exception):
             session.execute(_text(stmt))
-        except Exception:
-            pass
     session.commit()
 
 

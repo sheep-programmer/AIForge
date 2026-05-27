@@ -174,6 +174,7 @@ def _apply_ranking(
 
 # ---------- 后端调用 ----------
 
+
 def _call_ollama(system: str, user: str, settings: Settings) -> str:
     """同步调用 Ollama /api/chat，返回模型完整文本输出。"""
     payload = {
@@ -222,6 +223,7 @@ def _call_haiku(system: str, user: str, settings: Settings) -> str:
 
 
 # ---------- 主入口 ----------
+
 
 def _embedding_fallback(
     candidates: list[tuple[Skill, float]],

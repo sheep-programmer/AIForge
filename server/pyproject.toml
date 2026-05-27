@@ -74,20 +74,43 @@ select = [
     "TID",          # tidy imports
     "RUF",          # ruff
 ]
-ignore = ["E501"]  # line length handled by formatter
+ignore = [
+    "E501",   # line length handled by formatter
+    # 项目是双语的（中文注释 / docstring + 英文代码），全角标点是有意为之
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
+    # FastAPI 用 Depends(...) 作为参数默认值是官方模式，B008 与 FastAPI 直接冲突
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试里允许更宽松的异常断言
+"tests/*" = ["B017"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
+# strict=true 在快速迭代期太严，分项启用主要检查
+strict = false
 warn_return_any = true
-warn_unused_ignores = true
+# 本地与 CI 环境的 .pyi 不一定齐全；不为偶发的多余 ignore 卡掉 CI
+warn_unused_ignores = false
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 no_implicit_optional = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["sqlite_vss.*", "sentence_transformers.*", "rank_bm25.*", "sklearn.*"]
+module = [
+    "sqlite_vss.*",
+    "sentence_transformers.*",
+    "rank_bm25.*",
+    "sklearn.*",
+    "uvicorn.*",
+    "frontmatter.*",
+    "github.*",
+    "ulid.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

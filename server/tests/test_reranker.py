@@ -10,7 +10,6 @@ import pytest
 
 from aiforge.recommender import reranker as reranker_mod
 from aiforge.recommender.reranker import rerank
-
 from tests._utils import make_skill
 
 
@@ -49,9 +48,7 @@ def test_reranker_none_is_passthrough_no_fallback_flag() -> None:
 
 def test_reranker_none_respects_top_k() -> None:
     """top_k 限制返回数。"""
-    outcome = rerank(
-        "q", _candidates(5), top_k=2, settings=_FakeSettings(reranker="none")
-    )
+    outcome = rerank("q", _candidates(5), top_k=2, settings=_FakeSettings(reranker="none"))
     assert len(outcome.items) == 2
 
 
@@ -87,9 +84,7 @@ def test_ollama_timeout_triggers_fallback(monkeypatch: pytest.MonkeyPatch) -> No
 
     monkeypatch.setattr(reranker_mod, "_call_ollama", _raise_timeout)
 
-    outcome = rerank(
-        "q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama")
-    )
+    outcome = rerank("q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama"))
     assert outcome.fallback is True
     assert len(outcome.items) == 3
 
@@ -102,9 +97,7 @@ def test_invalid_json_response_triggers_fallback(monkeypatch: pytest.MonkeyPatch
 
     monkeypatch.setattr(reranker_mod, "_call_ollama", _return_garbage)
 
-    outcome = rerank(
-        "q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama")
-    )
+    outcome = rerank("q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama"))
     assert outcome.fallback is True
     assert all("embedding-only" in it.reason for it in outcome.items)
 
@@ -117,9 +110,7 @@ def test_empty_ranking_triggers_fallback(monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(reranker_mod, "_call_ollama", _return_empty)
 
-    outcome = rerank(
-        "q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama")
-    )
+    outcome = rerank("q", _candidates(3), top_k=3, settings=_FakeSettings(reranker="ollama"))
     assert outcome.fallback is True
 
 

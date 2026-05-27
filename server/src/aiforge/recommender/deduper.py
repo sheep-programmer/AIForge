@@ -13,7 +13,7 @@ recency 用 ``updated_at`` 距今天数映射到 [0, 1]：当天=1，半年前�
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -43,10 +43,10 @@ def _recency_score(updated_at: datetime | None) -> float:
     """更新时间越近分数越高，指数衰减，范围 [0, 1]。"""
     if updated_at is None:
         return 0.0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # SQLite naive datetime 兼容
     if updated_at.tzinfo is None:
-        updated_at = updated_at.replace(tzinfo=timezone.utc)
+        updated_at = updated_at.replace(tzinfo=UTC)
     age_days = max(0.0, (now - updated_at).total_seconds() / 86400.0)
     return float(math.exp(-math.log(2) * age_days / _RECENCY_HALFLIFE_DAYS))
 

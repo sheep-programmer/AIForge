@@ -49,8 +49,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="aiforge-mcp",
         description=(
-            "AIForge MCP gateway: aggregate active MCP servers "
-            "behind a single stdio MCP server."
+            "AIForge MCP gateway: aggregate active MCP servers behind a single stdio MCP server."
         ),
     )
     p.add_argument(
@@ -69,8 +68,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         default=None,
         dest="tags",
         help=(
-            "Only expose MCPs with this tag (repeatable). "
-            "Env: AIFORGE_GATEWAY_ACTIVE_TAGS (csv)."
+            "Only expose MCPs with this tag (repeatable). Env: AIFORGE_GATEWAY_ACTIVE_TAGS (csv)."
         ),
     )
     p.add_argument(
@@ -78,10 +76,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         dest="pins",
-        help=(
-            "Always include this artifact id (repeatable). "
-            "Env: AIFORGE_GATEWAY_PIN_IDS (csv)."
-        ),
+        help=("Always include this artifact id (repeatable). Env: AIFORGE_GATEWAY_PIN_IDS (csv)."),
     )
     p.add_argument(
         "--log-level",
@@ -121,7 +116,7 @@ async def _run(args: argparse.Namespace) -> int:
             pin_ids=_resolve_pins(args.pins),
         )
         active = await registry.load()
-    except Exception as exc:  # noqa: BLE001 — registry 失败不应让 gateway 崩溃
+    except Exception as exc:
         log.error("cli.registry_failed", error=str(exc))
 
     server = GatewayServer(active)

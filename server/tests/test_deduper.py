@@ -6,12 +6,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from aiforge.core.db import pack_embedding
 from aiforge.recommender.deduper import dedup
-
 from tests._utils import deterministic_vec, make_skill
 
 
@@ -53,7 +52,7 @@ def test_distinct_skills_kept_in_separate_clusters() -> None:
 def test_representative_uses_highest_score() -> None:
     """同簇内代表挑综合分（含 stars + recency）最高的。"""
     vec = deterministic_vec("same topic")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     low = make_skill("low", source_stars=1, updated_at=now - timedelta(days=900))
     high = make_skill("high", source_stars=10_000, updated_at=now)

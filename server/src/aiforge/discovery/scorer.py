@@ -7,12 +7,12 @@ score = 0.4*log(stars+1)/log(100k) + 0.3*skill_count_normalized + 0.2*recency + 
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 # 归一化基准
 _STAR_DENOM = math.log(100_000.0)
-_SKILL_COUNT_FULL = 20         # 20 个 SKILL.md 即认为满分
+_SKILL_COUNT_FULL = 20  # 20 个 SKILL.md 即认为满分
 _RECENCY_HALFLIFE_DAYS = 180.0  # 180 天为衰减半衰期
 
 
@@ -48,9 +48,9 @@ def _recency(value: Any) -> float:
     dt = _to_datetime(value)
     if dt is None:
         return 0.0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     days = max(0.0, (now - dt).total_seconds() / 86_400.0)
     return _clamp(math.exp(-math.log(2) * days / _RECENCY_HALFLIFE_DAYS), 0.0, 1.0)
 

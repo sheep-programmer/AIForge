@@ -91,9 +91,7 @@ class Registry:
                 cfg = detail.get("mcp_config")
                 name = detail.get("name") or aid
                 if not isinstance(cfg, dict) or not cfg.get("transport"):
-                    logger.warning(
-                        "registry.skip_missing_config", artifact_id=aid, name=name
-                    )
+                    logger.warning("registry.skip_missing_config", artifact_id=aid, name=name)
                     continue
                 results.append(ActiveMCP(artifact_id=aid, name=name, config=cfg))
         logger.info("registry.loaded", count=len(results))
@@ -101,7 +99,7 @@ class Registry:
 
     async def _list_active(self, client: httpx.AsyncClient) -> list[dict[str, Any]]:
         url = f"{self.aiforge_url}/v1/artifacts"
-        params = {"type": "mcp", "active": "true", "limit": 500}
+        params: dict[str, str | int] = {"type": "mcp", "active": "true", "limit": 500}
         try:
             resp = await client.get(url, params=params)
             resp.raise_for_status()

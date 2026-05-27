@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 
 import structlog
 from sqlalchemy.orm import Session, sessionmaker
@@ -31,8 +31,8 @@ class RemoteFinderScheduler:
         session_factory: SessionFactory | None = None,
     ) -> None:
         self._settings = settings or get_settings()
-        self._session_factory: SessionFactory = (
-            session_factory or _default_session_factory(self._settings)
+        self._session_factory: SessionFactory = session_factory or _default_session_factory(
+            self._settings
         )
         self._task: asyncio.Task[None] | None = None
         self._stopping = asyncio.Event()
@@ -63,7 +63,7 @@ class RemoteFinderScheduler:
         self._task.cancel()
         try:
             await self._task
-        except (asyncio.CancelledError, Exception):  # noqa: BLE001
+        except (asyncio.CancelledError, Exception):
             pass
         finally:
             self._task = None
@@ -80,13 +80,13 @@ class RemoteFinderScheduler:
                 await asyncio.wait_for(self._stopping.wait(), timeout=interval)
                 # wait 成功返回 → stopping 被置位 → 退出
                 break
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await self._tick_safe()
 
     async def _tick_safe(self) -> None:
         try:
             await self._tick()
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.exception("scheduler.tick_failed")
 
     async def _tick(self) -> None:

@@ -23,7 +23,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from aiforge import __version__
 from aiforge.api import admin, autotag, health, ingest, recommend, skills, tags
 from aiforge.config import get_settings
-from aiforge.core.db import init_db, get_session_maker
+from aiforge.core.db import get_session_maker, init_db
 from aiforge.core.tags import ensure_builtin_tags
 
 logger = structlog.get_logger(__name__)
@@ -64,10 +64,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     scheduler = None
     if settings.enable_remote_finder:
         try:
-            from aiforge.discovery.finder import RemoteFinderScheduler
+            from aiforge.discovery.scheduler import RemoteFinderScheduler
 
             scheduler = RemoteFinderScheduler(settings)
-            await scheduler.start()
+            scheduler.start()
             logger.info("startup.finder_started", interval=settings.finder_interval_seconds)
         except Exception as exc:
             logger.warning("startup.finder_failed", error=str(exc))
@@ -86,9 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 logger.exception("shutdown.finder_stop_failed")
 
 
-def _error_response(
-    status_code: int, message: str, code: str, request_id: str
-) -> JSONResponse:
+def _error_response(status_code: int, message: str, code: str, request_id: str) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
         content={"error": message, "code": code, "request_id": request_id},
@@ -128,9 +126,7 @@ def create_app() -> FastAPI:
 
     # 全局异常处理 —— 统一 JSON 错误体
     @app.exception_handler(StarletteHTTPException)
-    async def http_exc_handler(
-        request: Request, exc: StarletteHTTPException
-    ) -> JSONResponse:
+    async def http_exc_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         rid = getattr(request.state, "request_id", "")
         if isinstance(exc.detail, dict) and "error" in exc.detail:
             payload = {
@@ -147,9 +143,7 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         rid = getattr(request.state, "request_id", "")
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict
@@ -84,13 +86,13 @@ def _to_detail(s: Skill) -> SkillDetail:
 
 
 def _apply_filters(
-    base,
+    base: Any,
     q: str | None,
     source_repo: str | None,
     active: bool | None,
     artifact_type: str | None,
     tag: str | None,
-):
+) -> Any:
     if q:
         like = f"%{q}%"
         base = base.where(or_(Skill.name.ilike(like), Skill.description.ilike(like)))
@@ -137,9 +139,7 @@ def list_skills(
     base = _apply_filters(base, q, source_repo, active, type, tag)
 
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = db.scalars(
-        base.order_by(Skill.updated_at.desc()).limit(limit).offset(offset)
-    ).all()
+    rows = db.scalars(base.order_by(Skill.updated_at.desc()).limit(limit).offset(offset)).all()
 
     return SkillListResponse(
         total=int(total),
@@ -190,6 +190,7 @@ def get_artifact(artifact_id: str, db: Session = Depends(get_db)) -> SkillDetail
 
 # ---------- artifact tag 管理 ----------
 
+
 @router.get(
     "/artifacts/{artifact_id}/tags",
     response_model=ArtifactTagsResponse,
@@ -225,9 +226,7 @@ def set_tags_endpoint(
     names = set_artifact_tags(db, s, payload.tags, source=payload.source)
     return ArtifactTagsResponse(
         artifact_id=s.id,
-        tags=[
-            ArtifactTagAssignment(tag=n, source=payload.source) for n in names
-        ],
+        tags=[ArtifactTagAssignment(tag=n, source=payload.source) for n in names],
     )
 
 
@@ -242,9 +241,7 @@ def add_tag_endpoint(
     db: Session = Depends(get_db),
 ) -> ArtifactTagsResponse:
     s = _load_artifact_or_404(db, artifact_id)
-    add_artifact_tag(
-        db, s, payload.tag, source=payload.source, score=payload.score
-    )
+    add_artifact_tag(db, s, payload.tag, source=payload.source, score=payload.score)
     db.refresh(s)
     return ArtifactTagsResponse(
         artifact_id=s.id,

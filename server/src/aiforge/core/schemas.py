@@ -7,13 +7,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-
 # Artifact 类型字面量在多个 schema 间共享
 ArtifactTypeLit = Literal["skill", "mcp", "plugin"]
 TagSourceLit = Literal["manual", "auto"]
 
 
 # ---------- 推荐 ----------
+
 
 class RecommendRequest(BaseModel):
     """POST /v1/recommend 请求体。"""
@@ -55,6 +55,7 @@ class RecommendResponse(BaseModel):
 
 # ---------- Ingest ----------
 
+
 class IngestRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -80,6 +81,7 @@ class IngestJobStatus(BaseModel):
 
 
 # ---------- Skills ----------
+
 
 class SkillBrief(BaseModel):
     """列表用的精简表示。"""
@@ -118,6 +120,7 @@ class SkillListResponse(BaseModel):
 
 
 # ---------- Tag ----------
+
 
 class TagItem(BaseModel):
     name: str
@@ -170,6 +173,7 @@ class ArtifactTagsResponse(BaseModel):
 
 # ---------- Autotag ----------
 
+
 class AutotagRequest(BaseModel):
     """触发自动打标的批量任务。"""
 
@@ -193,6 +197,7 @@ class AutotagResponse(BaseModel):
 
 
 # ---------- Admin / Discovery ----------
+
 
 class PendingDiscoveryItem(BaseModel):
     id: str
@@ -219,6 +224,7 @@ class ApprovalResponse(BaseModel):
 
 
 # ---------- Health ----------
+
 
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded", "error"]

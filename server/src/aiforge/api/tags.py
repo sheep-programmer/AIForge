@@ -39,12 +39,14 @@ def list_tags(
     rows = db.scalars(base.order_by(Tag.name)).all()
 
     # 一次性聚合 artifact 数
-    counts = dict(
-        db.execute(
-            select(ArtifactTag.tag_name, func.count(ArtifactTag.skill_id))
-            .group_by(ArtifactTag.tag_name)
+    counts: dict[str, int] = {
+        str(name): int(n)
+        for name, n in db.execute(
+            select(ArtifactTag.tag_name, func.count(ArtifactTag.skill_id)).group_by(
+                ArtifactTag.tag_name
+            )
         ).all()
-    )
+    }
 
     items = [
         TagItem(
