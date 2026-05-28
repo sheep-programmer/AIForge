@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/sheep-programmer/AIForge">
-  <img src="docs/assets/hero.svg" alt="AIForge" width="100%" />
+  <img src="docs/assets/hero.png" alt="AIForge" width="100%" />
 </a>
 
 <br/>
@@ -54,7 +54,7 @@
 
 <div align="center">
   <a href="docs/web-admin.md">
-    <img src="docs/assets/web-screenshot.svg" alt="AIForge Web 管理面板截图" width="92%"/>
+    <img src="docs/assets/web-screenshot.png" alt="AIForge Web 管理面板截图" width="92%"/>
   </a>
   <br/>
   <sub>「Editorial Engineering」设计语言 · 暖色 parchment 底 + 单一氧化铜绿强调 · Fraunces 衬线标题 + Inter 正文 + JetBrains Mono 数据</sub>

@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/sheep-programmer/AIForge">
-  <img src="docs/assets/hero.svg" alt="AIForge" width="100%" />
+  <img src="docs/assets/hero.png" alt="AIForge" width="100%" />
 </a>
 
 <br/>
@@ -54,7 +54,7 @@ Three artifact ecosystems → three old problems:
 
 <div align="center">
   <a href="docs/web-admin.en.md">
-    <img src="docs/assets/web-screenshot.svg" alt="AIForge web admin" width="92%"/>
+    <img src="docs/assets/web-screenshot.png" alt="AIForge web admin" width="92%"/>
   </a>
   <br/>
   <sub>"Editorial Engineering" design — warm parchment + single oxide-green accent · Fraunces serif + Inter body + JetBrains Mono for data</sub>
