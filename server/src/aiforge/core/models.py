@@ -209,6 +209,29 @@ class RecommendationLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
 
 
+class EnvironmentSnapshot(Base):
+    """本机扫描快照：某台机器上各 agent 已装的 MCP / plugin / skill。
+
+    每台机器（``machine``）只保留**最新一份** —— 上报时按 machine upsert。
+    ``payload`` 存 scanner 产出的完整 JSON（env 已脱敏）。
+    """
+
+    __tablename__ = "environment_snapshots"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    machine: Mapped[str] = mapped_column(String(256), unique=True, index=True)
+    payload: Mapped[dict] = mapped_column(JSON)  # 完整 scan 结果
+    # 反范式计数，便于列表页快速展示，不必解 payload
+    total_mcp: Mapped[int] = mapped_column(Integer, default=0)
+    total_plugin: Mapped[int] = mapped_column(Integer, default=0)
+    total_skill: Mapped[int] = mapped_column(Integer, default=0)
+    agent_count: Mapped[int] = mapped_column(Integer, default=0)
+    scanned_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+
 # 类型别名供应用代码使用
 IngestStatus = Literal["pending", "fetching", "parsing", "embedding", "done", "error"]
 DiscoveryDecision = Literal["pending", "approved", "rejected"]

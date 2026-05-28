@@ -9,8 +9,10 @@ import type {
   ArtifactTagsResponse,
   ArtifactType,
   AutotagJob,
+  EnvironmentResponse,
   HealthResponse,
   IngestJob,
+  InstalledNames,
   PendingDiscovery,
   RecommendResponse,
   TagItem,
@@ -207,4 +209,10 @@ export const api = {
     }
     return null;
   },
+
+  // 本机环境：aiforge scan --sync 上报的各家 agent 已装清单
+  getEnvironment: () => fetcher<EnvironmentResponse>('/v1/environment'),
+
+  // 扁平去重名单，用于跨页交叉引用「已装」标记
+  getInstalledNames: () => fetcher<InstalledNames>('/v1/environment/installed'),
 };

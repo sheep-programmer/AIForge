@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "为 Claude Code 智能推荐和注入最相关的 skill",
   "author": "AIForge contributors",
-  "homepage": "https://github.com/aiforge/aiforge",
+  "homepage": "https://github.com/sheep-programmer/AIForge",
   "hooks": {
     "UserPromptSubmit": "${CLAUDE_PLUGIN_ROOT}/hooks/on-user-prompt"
   },
@@ -17,7 +17,8 @@
     "commands/install.md",
     "commands/uninstall.md",
     "commands/tag.md",
-    "commands/autotag.md"
+    "commands/autotag.md",
+    "commands/scan.md"
   ],
   "skills": ["skills/aiforge/SKILL.md"]
 }

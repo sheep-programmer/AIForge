@@ -14,6 +14,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   BarChart3,
+  MonitorSmartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
@@ -59,6 +60,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'System',
     items: [
+      { href: '/environment', label: '本机环境', hint: '已装的 MCP / plugin / skill', icon: MonitorSmartphone, flag: 'NEW' },
       { href: '/settings', label: '设置', hint: 'API key / 主题 / 后端地址', icon: SettingsIcon },
     ],
   },

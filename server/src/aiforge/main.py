@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from aiforge import __version__
-from aiforge.api import admin, autotag, health, ingest, recommend, skills, tags
+from aiforge.api import admin, autotag, environment, health, ingest, recommend, skills, tags
 from aiforge.config import get_settings
 from aiforge.core.db import get_session_maker, init_db
 from aiforge.core.tags import ensure_builtin_tags
@@ -174,6 +174,7 @@ def create_app() -> FastAPI:
     app.include_router(tags.router)
     app.include_router(admin.router)
     app.include_router(autotag.router)
+    app.include_router(environment.router)
 
     logger.info(
         "app.configured",

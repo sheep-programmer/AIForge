@@ -124,3 +124,70 @@ export interface PendingDiscovery {
   found_at: string;
   decision: 'pending' | 'approved' | 'rejected';
 }
+
+// —— /v1/environment ——
+// 本机环境扫描：各家 agent 的 settings 目录里已装了哪些 MCP / plugin / skill。
+// 与 aiforge scan --sync 上报的 payload 保持一致；密钥值已脱敏，只留 env_keys。
+
+export interface InstalledMcp {
+  name: string;
+  transport: string;
+  command: string | null;
+  args: string[];
+  url: string | null;
+  /** env 变量的 key 名（值已脱敏，不会出现在响应里） */
+  env_keys: string[];
+  source: string;
+}
+
+export interface InstalledPlugin {
+  name: string;
+  marketplace: string | null;
+  scope: string | null;
+  version: string | null;
+  path: string | null;
+}
+
+export interface InstalledSkill {
+  name: string;
+  path: string;
+}
+
+export interface AgentEnv {
+  agent: string;
+  display: string;
+  detected: boolean;
+  config_paths: string[];
+  mcps: InstalledMcp[];
+  plugins: InstalledPlugin[];
+  skills: InstalledSkill[];
+  counts: { mcp: number; plugin: number; skill: number };
+}
+
+export interface EnvironmentPayload {
+  machine: string;
+  scanned_at: string;
+  cwd: string;
+  agents: AgentEnv[];
+  totals: { mcp: number; plugin: number; skill: number };
+}
+
+export interface EnvironmentMachine {
+  machine: string;
+  scanned_at: string;
+  total_mcp: number;
+  total_plugin: number;
+  total_skill: number;
+  agent_count: number;
+  payload: EnvironmentPayload;
+}
+
+export interface EnvironmentResponse {
+  machines: EnvironmentMachine[];
+}
+
+export interface InstalledNames {
+  mcp: string[];
+  plugin: string[];
+  skill: string[];
+}

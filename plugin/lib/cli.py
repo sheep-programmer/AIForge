@@ -28,6 +28,7 @@ from install import (  # noqa: E402
     uninstall_mcp,
     uninstall_plugin,
 )
+from scanner import scan_environment  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -311,6 +312,51 @@ def cmd_autotag(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_scan(args: argparse.Namespace) -> int:
+    """扫描本机所有已知 agent（Claude Code / Codex / Cursor / Gemini / Windsurf / VS Code），
+    列出已安装的 MCP / plugin / skill。可选 --sync 上报到服务端供 Web 面板展示。"""
+    snapshot = scan_environment(include_undetected=args.all)
+
+    if args.json:
+        import json as _json
+
+        print(_json.dumps(snapshot, ensure_ascii=False, indent=2))
+        return 0
+
+    totals = snapshot["totals"]
+    print(f"AIForge 环境扫描 @ {snapshot['machine']}")
+    print(
+        f"  合计: {totals['mcp']} MCP · {totals['plugin']} plugin · {totals['skill']} skill"
+        f"（跨 {len(snapshot['agents'])} 个 agent）"
+    )
+    for a in snapshot["agents"]:
+        mark = "●" if a["detected"] else "○"
+        c = a["counts"]
+        print(f"\n{mark} {a['display']}  [{c['mcp']} mcp · {c['plugin']} plugin · {c['skill']} skill]")
+        for path in a.get("config_paths", []):
+            print(f"    config: {path}")
+        for m in a["mcps"]:
+            extra = f" → {m['command']}" if m.get("command") else (f" → {m['url']}" if m.get("url") else "")
+            env = f"  env:{','.join(m['env_keys'])}" if m.get("env_keys") else ""
+            print(f"    [mcp]    {m['name']} ({m['transport']}){extra}{env}")
+        for p in a["plugins"]:
+            ver = f" v{p['version']}" if p.get("version") else ""
+            print(f"    [plugin] {p['name']}{ver}")
+        for s in a["skills"]:
+            print(f"    [skill]  {s['name']}")
+
+    if args.sync:
+        cfg = load_config()
+        client = AIForgeClient(cfg.server_url, timeout=5.0)
+        try:
+            resp = client.push_environment(snapshot)
+            print(f"\n已上报到服务端: {resp.get('snapshot_id') or 'ok'}（Web 面板 /environment 可见）")
+        except ServerUnavailable as exc:
+            print(f"\n上报失败（扫描结果仍在上方）：{exc}", file=sys.stderr)
+            return 1
+    return 0
+
+
 def _apply_set(cfg: Any, key: str, value: str) -> bool:
     """把字符串 value 写入 cfg 对应字段；返回是否识别到 key。"""
     if key == "server_url":
@@ -374,6 +420,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p_autotag.add_argument("--ids", default=None, help="逗号分隔的 artifact id 子集")
     p_autotag.add_argument("--max-polls", type=int, default=60, dest="max_polls")
 
+    p_scan = sub.add_parser("scan", help="扫描本机各 agent 已装的 MCP / plugin / skill")
+    p_scan.add_argument("--sync", action="store_true", help="把扫描结果上报服务端供 Web 面板展示")
+    p_scan.add_argument("--json", action="store_true", help="输出原始 JSON")
+    p_scan.add_argument("--all", action="store_true", help="包含未检测到的 agent（显示为 ○）")
+
     parser.set_defaults(_handlers={
         "status": cmd_status,
         "add": cmd_add,
@@ -385,6 +436,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "uninstall": cmd_uninstall,
         "tag": cmd_tag,
         "autotag": cmd_autotag,
+        "scan": cmd_scan,
     })
     return parser
 

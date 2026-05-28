@@ -196,6 +196,47 @@ class AutotagResponse(BaseModel):
     error: str | None = None
 
 
+# ---------- Environment scan ----------
+
+
+class EnvironmentScanRequest(BaseModel):
+    """插件上报的本机扫描快照（scanner.py 的输出，env 已脱敏）。
+
+    用 extra=allow 接住 scanner 未来可能加的字段，避免版本耦合。
+    """
+
+    model_config = ConfigDict(extra="allow")
+    machine: str = Field(..., min_length=1, max_length=256)
+    scanned_at: str | None = None
+    cwd: str | None = None
+    agents: list[dict[str, Any]] = Field(default_factory=list)
+    totals: dict[str, int] = Field(default_factory=dict)
+
+
+class EnvironmentScanResponse(BaseModel):
+    snapshot_id: str
+    machine: str
+    total_mcp: int
+    total_plugin: int
+    total_skill: int
+
+
+class EnvironmentSnapshotItem(BaseModel):
+    machine: str
+    scanned_at: datetime
+    total_mcp: int
+    total_plugin: int
+    total_skill: int
+    agent_count: int
+    payload: dict[str, Any]
+
+
+class EnvironmentResponse(BaseModel):
+    """所有上报过的机器，按 scanned_at 倒序。"""
+
+    machines: list[EnvironmentSnapshotItem]
+
+
 # ---------- Admin / Discovery ----------
 
 

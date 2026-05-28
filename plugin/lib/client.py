@@ -231,6 +231,21 @@ class AIForgeClient:
         return data
 
     # ------------------------------------------------------------------
+    # 环境扫描同步
+    # ------------------------------------------------------------------
+
+    def push_environment(self, snapshot: dict[str, Any]) -> dict[str, Any]:
+        """``POST /v1/environment/scan``，把本机扫描快照上报服务端。"""
+        return self._post_json("/v1/environment/scan", snapshot, timeout=5.0)
+
+    def get_environment(self) -> dict[str, Any]:
+        """``GET /v1/environment``，取服务端存的最新快照。"""
+        data = self._get_json("/v1/environment", timeout=3.0)
+        if not isinstance(data, dict):
+            raise ServerUnavailable("服务端返回的 environment 不是 JSON 对象")
+        return data
+
+    # ------------------------------------------------------------------
     # 内部工具
     # ------------------------------------------------------------------
     def _post_json(
