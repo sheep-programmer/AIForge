@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+import { BackendStatusBanner } from './backend-status-banner';
 import { ActivityTicker } from './activity-ticker';
 import { DensityProvider } from './density-context';
 import { Footer } from './footer';
@@ -38,6 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1 min-w-0 flex flex-col min-h-screen">
             <Topbar />
+            <BackendStatusBanner />
             <main className="px-6 lg:px-10 pt-6 pb-12 max-w-[1600px] mx-auto w-full flex-1">
               {children}
             </main>
