@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import {
   bulkAddTag,
   bulkRemoveTag,
+  bulkReplaceTags,
   type BulkResult,
 } from '@/lib/bulk-ops';
 
@@ -97,12 +98,23 @@ export function BulkTagDialog({
 
   const runForIds = async (idsToRun: string[]): Promise<BulkResult> => {
     setSubmitting(true);
+
+    // 「替换」走一次性全量替换：每个 artifact 的 tag 集合被 picked 覆盖（清空原有）。
+    if (mode === 'replace') {
+      setProgress({ done: 0, total: idsToRun.length });
+      const r = await bulkReplaceTags(
+        idsToRun.map((id) => ({ id, tags: picked })),
+        { onProgress: (done) => setProgress({ done, total: idsToRun.length }) },
+      );
+      setSubmitting(false);
+      return r;
+    }
+
+    // 「追加」「移除」：按 picked 里的每个 tag 逐轮 fan-out。
     const planned = idsToRun.length * picked.length;
     setProgress({ done: 0, total: planned });
     const merged: BulkResult = { ok: [], failed: [] };
     let cumulative = 0;
-    // 注意：「替换」在本对话框被简化为「先按 picked 名字反向移除 → 再 append」，
-    // 这与 strict 全量替换并不等价；如需严格替换，请改用 bulkReplaceTags。
     const runner = mode === 'remove' ? bulkRemoveTag : bulkAddTag;
 
     for (const tag of picked) {

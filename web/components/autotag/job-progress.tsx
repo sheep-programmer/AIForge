@@ -58,6 +58,13 @@ export function JobProgress({ jobId, estimatedTotal, onClear }: JobProgressProps
 
   // 当后端不可达时落回 mock：模拟一个推进中的 job
   const startRef = React.useRef(Date.now());
+  const [mockTick, setMockTick] = React.useState(0);
+  React.useEffect(() => {
+    if (data || cancelled) return;
+    const t = setInterval(() => setMockTick((n) => n + 1), 1500);
+    return () => clearInterval(t);
+  }, [data, cancelled]);
+
   const mockJob: AutotagJob = React.useMemo(() => {
     const total = estimatedTotal ?? MOCK_ARTIFACTS.length;
     const elapsed = Date.now() - startRef.current;
@@ -69,16 +76,8 @@ export function JobProgress({ jobId, estimatedTotal, onClear }: JobProgressProps
       artifacts_tagged: tagged,
       error: null,
     };
-  }, [estimatedTotal, jobId, data]);
-
-  const [mockTick, setMockTick] = React.useState(0);
-  React.useEffect(() => {
-    if (data || cancelled) return;
-    const t = setInterval(() => setMockTick((n) => n + 1), 1500);
-    return () => clearInterval(t);
-  }, [data, cancelled]);
-  // 触发 mockJob 重新计算
-  void mockTick;
+    // mockTick 每 1.5s 自增，驱动这里基于 elapsed 重新计算进度
+  }, [estimatedTotal, jobId, mockTick]);
 
   const job: AutotagJob = data ?? (error || !data ? mockJob : mockJob);
   const isDone = job.status === 'done';

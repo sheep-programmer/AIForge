@@ -59,7 +59,7 @@ class Registry:
     def _headers(self) -> dict[str, str]:
         headers: dict[str, str] = {"accept": "application/json"}
         if self.api_key:
-            headers["x-api-key"] = self.api_key
+            headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
 
     @staticmethod

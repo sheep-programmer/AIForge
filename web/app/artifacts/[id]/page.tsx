@@ -5,8 +5,9 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
+import { toast } from 'sonner';
 import { ArrowLeft, ExternalLink, Star } from 'lucide-react';
-import { fetcher } from '@/lib/api-client';
+import { api, fetcher } from '@/lib/api-client';
 import type { ArtifactDetail } from '@/lib/api-types';
 import { MOCK_ARTIFACT_DETAIL } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ export default function ArtifactDetailPage({
   // Next 15: params 是 Promise，在 client component 中用 use() 解包。
   const { id } = use(params);
 
-  const { data, error, isLoading } = useSWR<ArtifactDetail>(
+  const { data, error, isLoading, mutate } = useSWR<ArtifactDetail>(
     `/v1/artifacts/${id}`,
     fetcher,
     { onError: () => {} }
@@ -35,8 +36,20 @@ export default function ArtifactDetailPage({
   const [localActive, setLocalActive] = useState<boolean | null>(null);
   const isActive = localActive ?? artifact?.is_active ?? true;
 
-  // 后端尚未提供启用/禁用 PATCH，本地切换给用户反馈。
-  const onToggleActive = () => setLocalActive(!isActive);
+  // 乐观切换：先更新本地，再 PATCH /v1/skills/{id} 持久化；失败回滚。
+  const onToggleActive = async () => {
+    const next = !isActive;
+    setLocalActive(next);
+    if (isDemo) return; // demo 模式无后端，仅本地反馈
+    try {
+      await api.patchArtifact(id, { is_active: next });
+      await mutate();
+      toast.success(next ? '已启用' : '已禁用');
+    } catch {
+      setLocalActive(!next);
+      toast.error('切换失败，请重试');
+    }
+  };
 
   if (isLoading && !artifact) {
     return <DetailSkeleton />;

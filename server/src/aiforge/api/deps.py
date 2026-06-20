@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 from collections.abc import Generator
 
 from fastapi import Depends, Header, HTTPException, status
@@ -33,7 +34,7 @@ def _check_bearer(authorization: str | None, settings: Settings) -> None:
             headers={"WWW-Authenticate": "Bearer"},
         )
     scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or token != expected:
+    if scheme.lower() != "bearer" or not hmac.compare_digest(token, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": "invalid api key", "code": "unauthorized"},

@@ -7,7 +7,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session
 
 from aiforge.api.deps import get_db, optional_api_key, require_api_key
@@ -334,5 +334,11 @@ def delete_skill(skill_id: str, db: Session = Depends(get_db)) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": f"skill {skill_id} not found", "code": "not_found"},
         )
+    # 先删 vss_skills 里对齐的向量行（按 skills.rowid 对齐），否则向量留作孤儿：
+    # sqlite 复用 rowid 后会让新 skill 命中旧向量，污染相似度检索。
+    db.execute(
+        text("DELETE FROM vss_skills WHERE rowid = (SELECT rowid FROM skills WHERE id = :id)"),
+        {"id": skill_id},
+    )
     db.delete(s)
     db.commit()
