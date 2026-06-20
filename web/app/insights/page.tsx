@@ -4,9 +4,9 @@
 // 走 mock 优先：API 失败时所有面板都有可读的演示数据。
 
 import { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { Activity, Filter, TrendingDown } from 'lucide-react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { fetcher } from '@/lib/api-client';
 import type {
@@ -34,9 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { HelpTip } from '@/components/ui/help-tip';
 import { RecommendationHeatmap } from '@/components/insights/recommendation-heatmap';
 import { FunnelChart } from '@/components/insights/funnel-chart';
-import { TopArtifactsList } from '@/components/insights/top-artifacts-list';
 import { TagDistribution } from '@/components/insights/tag-distribution';
-import { LatencyHistogram } from '@/components/insights/latency-histogram';
 import { CoverageMatrix } from '@/components/insights/coverage-matrix';
 import { RealtimeStrip } from '@/components/insights/realtime-strip';
 import { KpiTile } from '@/components/insights/kpi-tile';
@@ -46,6 +44,23 @@ import {
   RangeControl,
   type RangeKey,
 } from '@/components/insights/filter-controls';
+
+// 依赖 recharts 的图表懒加载，把 recharts 移出 /insights 首屏 JS。
+const chartFallback = (h: number) => (
+  <div className="animate-pulse rounded bg-ink-100/60" style={{ height: h }} />
+);
+const KpiSparkline = dynamic(
+  () => import('@/components/insights/kpi-sparkline').then((m) => m.KpiSparkline),
+  { ssr: false, loading: () => chartFallback(88) },
+);
+const TopArtifactsList = dynamic(
+  () => import('@/components/insights/top-artifacts-list').then((m) => m.TopArtifactsList),
+  { ssr: false, loading: () => chartFallback(220) },
+);
+const LatencyHistogram = dynamic(
+  () => import('@/components/insights/latency-histogram').then((m) => m.LatencyHistogram),
+  { ssr: false, loading: () => chartFallback(220) },
+);
 
 type TypeFilter = 'all' | 'skill' | 'mcp' | 'plugin';
 const TYPE_OPTIONS: { key: TypeFilter; label: string }[] = [
@@ -192,38 +207,7 @@ export default function InsightsPage() {
 
         {/* 主 KPI sparkline */}
         <div className="h-[88px] -mx-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={MOCK_KPI_TIMESERIES} margin={{ top: 6, right: 12, left: 12, bottom: 0 }}>
-              <defs>
-                <linearGradient id="kpi-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0E5C4A" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="#0E5C4A" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="t" hide />
-              <YAxis hide domain={['dataMin - 10', 'dataMax + 20']} />
-              <Tooltip
-                cursor={{ stroke: 'rgba(14,17,22,0.18)', strokeWidth: 1 }}
-                contentStyle={{
-                  background: '#FFFFFF',
-                  border: '1px solid rgba(14,17,22,0.1)',
-                  borderRadius: 6,
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 11,
-                  padding: 8,
-                }}
-                formatter={(v: number) => [`${v} ms`, 'p95']}
-              />
-              <Area
-                type="monotone"
-                dataKey="p95"
-                stroke="#0E5C4A"
-                strokeWidth={1.2}
-                fill="url(#kpi-grad)"
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <KpiSparkline data={MOCK_KPI_TIMESERIES} />
         </div>
         <div className="flex items-center justify-between mt-1 text-2xs text-ink-400 font-mono">
           <span>p95 趋势 · {range.toUpperCase()}</span>

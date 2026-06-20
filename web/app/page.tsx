@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
   ArrowUpRight,
@@ -30,8 +31,16 @@ import { ArtifactTypeBadge, TagChip } from '@/components/ui/badge';
 import { HelpTip } from '@/components/ui/help-tip';
 import { fmtNumber, fmtRelativeTime } from '@/lib/utils';
 import { Reactor } from '@/components/dashboard/reactor';
-import { ThroughputChart } from '@/components/dashboard/throughput-chart';
 import { TypeMix } from '@/components/dashboard/type-mix';
+
+// 懒加载 recharts 吞吐图，让落地页（dashboard）首屏 JS 不预先打入图表库。
+const ThroughputChart = dynamic(
+  () => import('@/components/dashboard/throughput-chart').then((m) => m.ThroughputChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-[260px] animate-pulse rounded bg-ink-100/60" />,
+  },
+);
 
 export default function DashboardPage() {
   const { data: rawHealth } = useSWR<HealthResponse>('/v1/health', fetcher, {

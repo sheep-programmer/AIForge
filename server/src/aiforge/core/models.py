@@ -103,6 +103,12 @@ class Skill(Base):
     __table_args__ = (
         UniqueConstraint("source_url", "source_path", name="uq_skill_source"),
         Index("ix_skill_active_approved", "is_active", "is_approved"),
+        # 列表端点一律 ORDER BY updated_at DESC + offset 分页：给排序键建索引，
+        # 避免表增大后每次分页都要全量排序。
+        Index("ix_skill_updated_at", "updated_at"),
+        # artifacts 页按类型 tab 过滤后同样按 updated_at 排序：复合索引同时覆盖
+        # 「按 artifact_type 过滤」与「按 updated_at 排序」。
+        Index("ix_skill_type_updated", "artifact_type", "updated_at"),
     )
 
 

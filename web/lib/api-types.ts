@@ -1,76 +1,69 @@
-// 与 server/src/aiforge/core/schemas.py 保持手工同步的 TypeScript 类型。
-// 改动请同步两侧；不要在前端用任何"猜测的"字段。
+// 前端 API 类型。**不要手改 lib/api-schema.ts**——它由后端 OpenAPI 经
+// `npm run gen:api-types` 生成（流程：server 端 `uv run python scripts/export_openapi.py`
+// 刷新 web/openapi.json，再跑生成）。
+//
+// 下面把后端 schema（components['schemas']）派生为前端语义名（Skill* → Artifact*）。
+// 后端对带默认值的字段标了可选（如 tags / score / mcp_config），这里用交叉类型把它们
+// 收窄回前端实际依赖的必填形状——字段集与历史手写类型一致，消费端不受影响。
+// 后端一旦改名/改型，这里会 tsc 报错，从而把「漂移」挡在编译期。
+//
+// 仍手工维护的只有纯前端视图模型：IngestJob / AutotagJob（跨端点、状态用更严格的字面量
+// 联合）、Environment*（对后端不透明 payload 的细化）与少量枚举。
+
+import type { components } from './api-schema';
+
+type Schemas = components['schemas'];
+type JsonObject = Record<string, unknown>;
 
 export type ArtifactType = 'skill' | 'mcp' | 'plugin';
 export type TagSource = 'manual' | 'auto';
 
-export interface ArtifactBrief {
-  id: string;
-  name: string;
-  description: string;
-  source_url: string;
-  source_repo: string;
-  source_stars: number;
-  is_active: boolean;
-  body_tokens: number;
-  recommend_count: number;
-  updated_at: string;
-  artifact_type: ArtifactType;
+export type ArtifactBrief = Schemas['SkillBrief'] & { tags: string[] };
+
+export type ArtifactDetail = Schemas['SkillDetail'] & {
   tags: string[];
-}
+  mcp_config: JsonObject | null;
+  plugin_manifest: JsonObject | null;
+};
 
-export interface ArtifactDetail extends ArtifactBrief {
-  body: string;
-  source_path: string;
-  license: string | null;
-  cluster_id: number | null;
-  is_approved: boolean;
-  created_at: string;
-  last_recommended_at: string | null;
-  mcp_config: Record<string, unknown> | null;
-  plugin_manifest: Record<string, unknown> | null;
-}
-
-export interface ArtifactListResponse {
-  total: number;
+export type ArtifactListResponse = Omit<Schemas['SkillListResponse'], 'items'> & {
   items: ArtifactBrief[];
-  limit: number;
-  offset: number;
-}
+};
 
-export interface TagItem {
-  name: string;
-  description: string | null;
-  is_builtin: boolean;
-  artifact_count: number;
-  created_at: string;
-}
+export type TagItem = Schemas['TagItem'] & { description: string | null };
 
-export interface TagListResponse {
-  total: number;
+export type TagListResponse = Omit<Schemas['TagListResponse'], 'items'> & {
   items: TagItem[];
-}
+};
 
-export interface ArtifactTagAssignment {
-  tag: string;
+export type ArtifactTagAssignment = Schemas['ArtifactTagAssignment'] & {
   source: TagSource;
   score: number | null;
-}
+};
 
-export interface ArtifactTagsResponse {
-  artifact_id: string;
+export type ArtifactTagsResponse = Omit<Schemas['ArtifactTagsResponse'], 'tags'> & {
   tags: ArtifactTagAssignment[];
-}
+};
 
-export interface HealthResponse {
-  status: 'ok' | 'degraded' | 'error';
-  version: string;
-  skills_count: number;
-  reranker_available: boolean;
-  embedder_loaded: boolean;
-  uptime_seconds: number;
-}
+export type HealthResponse = Schemas['HealthResponse'];
 
+export type Recommendation = Schemas['Recommendation'] & {
+  tags: string[];
+  rerank_reason: string | null;
+  mcp_config: JsonObject | null;
+  plugin_manifest: JsonObject | null;
+};
+
+export type RecommendResponse = Omit<Schemas['RecommendResponse'], 'recommendations'> & {
+  recommendations: Recommendation[];
+};
+
+export type PendingDiscovery = Schemas['PendingDiscoveryItem'];
+
+// —— 以下为纯前端视图模型，手工维护 ——
+
+// ingest 任务：POST /v1/ingest 与 GET /v1/ingest/{id} 共用一个前端视图，
+// status 用更严格的字面量联合，部分字段在创建瞬间尚不可知故为可选。
 export interface IngestJob {
   job_id: string;
   status: 'pending' | 'fetching' | 'parsing' | 'embedding' | 'done' | 'error';
@@ -90,44 +83,10 @@ export interface AutotagJob {
   error: string | null;
 }
 
-export interface Recommendation {
-  skill_id: string;
-  name: string;
-  description: string;
-  body: string;
-  score: number;
-  source_url: string;
-  rerank_reason: string | null;
-  tokens: number;
-  artifact_type: ArtifactType;
-  tags: string[];
-  mcp_config: Record<string, unknown> | null;
-  plugin_manifest: Record<string, unknown> | null;
-}
-
-export interface RecommendResponse {
-  request_id: string;
-  elapsed_ms: number;
-  recommendations: Recommendation[];
-  candidates_considered: number;
-  fallback_used: boolean;
-}
-
-export interface PendingDiscovery {
-  id: string;
-  source_url: string;
-  source_repo: string;
-  source_stars: number;
-  skill_count: number;
-  sample_skill_names: string[];
-  found_via: string;
-  found_at: string;
-  decision: 'pending' | 'approved' | 'rejected';
-}
-
 // —— /v1/environment ——
 // 本机环境扫描：各家 agent 的 settings 目录里已装了哪些 MCP / plugin / skill。
-// 与 aiforge scan --sync 上报的 payload 保持一致；密钥值已脱敏，只留 env_keys。
+// 后端 payload 是不透明 JSON，这里给出前端细化结构；与 aiforge scan --sync 上报的
+// payload 保持一致；密钥值已脱敏，只留 env_keys。
 
 export interface InstalledMcp {
   name: string;
