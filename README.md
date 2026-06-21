@@ -62,7 +62,7 @@
 
 <br/>
 
-九条路由，全部中文，企业级密度：
+十一条路由，全部中文，企业级密度：
 
 | 路径 | 内容 |
 |---|---|
@@ -73,8 +73,22 @@
 | `/ingest` | 粘贴 GitHub URL → 实时状态机时间线 |
 | `/autotag` | 小模型批量打标 + 进度条 + ETA + 实时操作流 |
 | `/playground` | 输入 prompt 看 top-K 推荐 + score bar + rerank 理由 |
+| `/insights` | 召回质量 / 延迟分布 / 覆盖矩阵 / 流量热力的深度分析面板 |
 | `/discovery` | 远程 finder 找到的高质量仓库审批队列 |
+| `/environment` | 本机各家 agent（Claude Code / Codex / Cursor / Gemini / Windsurf）已装的 MCP / plugin / skill 清单 |
 | `/settings` | API 地址 / API Key / 默认 top-K / 主题 |
+
+<br/>
+
+<sub>真实截图 · 演示数据（后端未连接时前端自动回落，UI 始终可演示）</sub>
+
+<table>
+<tr>
+<td width="33%"><a href="docs/assets/screen-insights.png"><img src="docs/assets/screen-insights.png" alt="Insights 深度分析面板"/></a><br/><sub><b><code>/insights</code></b> · 召回质量 / 延迟分布 / 覆盖矩阵</sub></td>
+<td width="33%"><a href="docs/assets/screen-playground.png"><img src="docs/assets/screen-playground.png" alt="Playground 推荐试验"/></a><br/><sub><b><code>/playground</code></b> · prompt → top-K 推荐 + 理由</sub></td>
+<td width="33%"><a href="docs/assets/screen-environment.png"><img src="docs/assets/screen-environment.png" alt="本机环境扫描"/></a><br/><sub><b><code>/environment</code></b> · 跨 agent 已装清单</sub></td>
+</tr>
+</table>
 
 ```bash
 cd web
@@ -263,7 +277,7 @@ Web 面板或 `/aiforge:install` 把 MCP 写进 `settings.json`、plugin 拉到 
 | 向量编码 | sentence-transformers (`all-MiniLM-L6-v2`) | 384 维、CPU 可跑、benchmark 充分 |
 | 重排 / 打标 | Ollama 跑 Qwen2.5-1.5B（默认） / Claude Haiku API | 体积小、速度快、排序质量出乎意料 |
 | MCP 网关 | asyncio + JSON-RPC | 无额外依赖，未来可换官方 SDK |
-| Web 管理面板 | Next.js 14 + Tailwind + 自研 shadcn 风格组件 | 静态导出，可部署在 FastAPI 后面 |
+| Web 管理面板 | Next.js 15 + React 19 + Tailwind + 自研 shadcn 风格组件 | 前端类型源自后端 OpenAPI，可部署在 FastAPI 后面 |
 | 插件 | bash + Python（stdlib only） | 原生 Claude Code，零三方依赖 |
 
 ---

@@ -4,9 +4,30 @@
 |------|------|---------|
 | `hero.png` | 仓库主页顶部 banner | `/README.md` · `/README.en.md` |
 | `hero.svg` | `hero.png` 的源文件，改动设计后用它重导出 | 离线工具 |
-| `web-screenshot.png` | README 内 Web 管理面板示意图 | `/README.md` · `/README.en.md` |
+| `web-screenshot.png` | README 内 Web 管理面板示意图（dashboard） | `/README.md` · `/README.en.md` |
 | `web-screenshot.svg` | `web-screenshot.png` 的源文件 | 离线工具 |
+| `screen-insights.png` | `/insights` 真实截图（README 画廊） | `/README.md` · `/README.en.md` |
+| `screen-playground.png` | `/playground` 真实截图（README 画廊） | `/README.md` · `/README.en.md` |
+| `screen-environment.png` | `/environment` 真实截图（README 画廊） | `/README.md` · `/README.en.md` |
 | `social-preview.png` | GitHub Settings → Social preview 上传图（1280×640） | 手动在 web UI 上传 |
+
+## 重拍真实截图（screen-*.png）
+
+真实截图用生产构建（`next/font` 在构建期自托管品牌字体）+ headless Chrome 拍摄。
+后端不可达时前端自动回落演示数据，因此无需启后端。recharts 的 `ResponsiveContainer`
+在 headless 下不渲染，故选无图表 / 自绘图表的页面拍。
+
+```bash
+cd web
+npm run build
+# standalone server 需把静态资源拷进去
+cp -r .next/static .next/standalone/.next/
+PORT=3500 node .next/standalone/server.js &
+# 2× 高清，virtual-time-budget 等首屏 + demo 回落
+google-chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 \
+  --window-size=1440,900 --virtual-time-budget=10000 \
+  --screenshot=../docs/assets/screen-insights.png http://localhost:3500/insights
+```
 
 ## 为什么 README 用 PNG 而不是 SVG
 

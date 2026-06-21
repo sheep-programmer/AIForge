@@ -62,7 +62,7 @@ Three artifact ecosystems → three old problems:
 
 <br/>
 
-Nine routes, enterprise-grade density:
+Eleven routes, enterprise-grade density:
 
 | Path | Contents |
 |---|---|
@@ -73,8 +73,22 @@ Nine routes, enterprise-grade density:
 | `/ingest` | Paste GitHub URL → live state-machine timeline |
 | `/autotag` | Small-model batch tagging + progress bar + ETA + live stream |
 | `/playground` | Type a prompt, see top-K + score bar + rerank reason |
+| `/insights` | Deep-dive analytics: recall quality / latency distribution / coverage matrix / traffic heatmap |
 | `/discovery` | Approval queue for remote-finder discoveries |
+| `/environment` | Installed MCP / plugin / skill across local agents (Claude Code / Codex / Cursor / Gemini / Windsurf) |
 | `/settings` | API base URL / API key / default top-K / theme |
+
+<br/>
+
+<sub>Real screenshots · demo data (the frontend falls back automatically when the backend is offline)</sub>
+
+<table>
+<tr>
+<td width="33%"><a href="docs/assets/screen-insights.png"><img src="docs/assets/screen-insights.png" alt="Insights analytics panel"/></a><br/><sub><b><code>/insights</code></b> · recall quality / latency / coverage</sub></td>
+<td width="33%"><a href="docs/assets/screen-playground.png"><img src="docs/assets/screen-playground.png" alt="Playground"/></a><br/><sub><b><code>/playground</code></b> · prompt → top-K + reasons</sub></td>
+<td width="33%"><a href="docs/assets/screen-environment.png"><img src="docs/assets/screen-environment.png" alt="Local environment scan"/></a><br/><sub><b><code>/environment</code></b> · installed across agents</sub></td>
+</tr>
+</table>
 
 ```bash
 cd web
@@ -263,7 +277,7 @@ See [docs/architecture.en.md](docs/architecture.en.md) (English) / [docs/archite
 | Embedder | sentence-transformers (`all-MiniLM-L6-v2`) | 384-dim, CPU-friendly, well-benchmarked |
 | Reranker / tagger | Ollama (Qwen2.5-1.5B, default) / Claude Haiku API | tiny, fast, surprisingly good at ranking |
 | MCP gateway | asyncio + JSON-RPC | no extra deps; SDK migration deferred |
-| Web admin | Next.js 14 + Tailwind + hand-rolled shadcn-style | static export, can be served behind FastAPI |
+| Web admin | Next.js 15 + React 19 + Tailwind + hand-rolled shadcn-style | frontend types derived from backend OpenAPI, can be served behind FastAPI |
 | Plugin | bash + Python (stdlib only) | native Claude Code, zero third-party deps |
 
 ---
